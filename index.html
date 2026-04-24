@@ -3,682 +3,465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Baggage Cart Health</title>
+    <title>GSE Health System</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         :root {
-            --bg: #f5f5f5;
-            --card-bg: #ffffff;
-            --text: #1a1a1a;
-            --text-secondary: #666666;
-            --border: #e0e0e0;
-            --ok: #4CAF50;
-            --minor: #FF9800;
-            --unsafe: #F44336;
-            --accent-blue: #2196F3;
-            --shadow: 0 1px 3px rgba(0,0,0,0.1);
-            --radius: 10px;
+            --bg: #f5f5f5; --card-bg: #ffffff; --text: #1a1a1a;
+            --text-secondary: #666666; --border: #e0e0e0;
+            --ok: #4CAF50; --minor: #FF9800; --unsafe: #F44336; --accent-blue: #0D47A1;
+            --ramp-orange: #E65100; --tower-blue: #01579B;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            max-width: 480px;
-            margin: 0 auto;
-            min-height: 100vh;
-            -webkit-tap-highlight-color: transparent;
+            background: var(--bg); color: var(--text);
+            max-width: 480px; margin: 0 auto; min-height: 100vh; -webkit-tap-highlight-color: transparent;
         }
-
-        .header {
-            background: #fff;
-            padding: 12px 16px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-        .sync-indicator {
-            font-size: 11px;
-            color: #999;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .sync-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #4CAF50;
-        }
-        .sync-dot.syncing { background: #FF9800; animation: pulse 1s infinite; }
-        .sync-dot.error { background: #F44336; }
+        /* Login */
+        .login-screen { display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; padding:20px; background:linear-gradient(135deg,#0D47A1,#01579B,#1A237E); }
+        .login-card { background:#fff; border-radius:16px; padding:28px 20px; width:100%; max-width:380px; box-shadow:0 6px 24px rgba(0,0,0,0.4); }
+        .login-logo { text-align:center; margin-bottom:20px; }
+        .login-logo h1 { font-size:22px; font-weight:800; color:#0D47A1; }
+        .login-logo p { font-size:11px; color:#666; margin-top:4px; }
+        .login-card label { font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px; }
+        .login-card input,.login-card select { width:100%; padding:12px 12px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px; margin-bottom:14px; outline:none; background:#f9f9f9; }
+        .login-card input:focus,.login-card select:focus { border-color:#0D47A1; background:#fff; }
+        .role-indicator { display:flex; gap:8px; margin-bottom:14px; }
+        .role-card { flex:1; padding:12px 4px; border:2px solid #e0e0e0; border-radius:8px; text-align:center; cursor:pointer; transition:all 0.2s; }
+        .role-card.selected { border-color:#0D47A1; background:#E3F2FD; }
+        .role-card .role-icon { font-size:26px; display:block; margin-bottom:2px; }
+        .role-card .role-name { font-size:11px; font-weight:600; }
+        .role-card .role-desc { font-size:9px; color:#999; }
+        .login-btn { width:100%; padding:14px; background:#0D47A1; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; }
+        .login-error { color:#F44336; font-size:11px; text-align:center; min-height:16px; margin-top:6px; }
+        /* App */
+        .app-container { display:none; }
+        .header { background:#fff; padding:10px 14px; position:sticky; top:0; z-index:100; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+        .header h1 { font-size:16px; font-weight:700; }
+        .user-badge { font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; color:#fff; text-transform:uppercase; }
+        .user-badge.ramp { background:var(--ramp-orange); }
+        .user-badge.tower { background:var(--tower-blue); }
+        .logout-btn { font-size:10px; color:#F44336; background:none; border:none; cursor:pointer; font-weight:600; }
+        .sync-indicator { font-size:9px; color:#999; display:flex; align-items:center; gap:3px; }
+        .sync-dot { width:6px; height:6px; border-radius:50%; background:#4CAF50; }
+        .sync-dot.syncing { background:#FF9800; animation:pulse 1s infinite; }
+        .sync-dot.error { background:#F44336; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-        .search-container {
-            padding: 12px 16px;
-            background: #fff;
-            border-bottom: 1px solid var(--border);
-        }
-        .search-input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: 15px;
-            background: #f9f9f9;
-            outline: none;
-            transition: border 0.2s;
-        }
-        .search-input:focus { border-color: var(--accent-blue); background: #fff; }
-
-        .tabs {
-            display: flex;
-            background: #fff;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 56px;
-            z-index: 99;
-        }
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px 8px;
-            font-size: 13px;
-            font-weight: 600;
-            border: none;
-            background: none;
-            cursor: pointer;
-            color: var(--text-secondary);
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            letter-spacing: -0.2px;
-            white-space: nowrap;
-        }
-        .tab.active { color: var(--text); border-bottom-color: var(--accent-blue); }
-        .tab-badge {
-            display: inline-block;
-            background: #eee;
-            border-radius: 10px;
-            padding: 2px 8px;
-            font-size: 11px;
-            margin-left: 4px;
-            font-weight: 500;
-        }
-        .tab.active .tab-badge { background: #e3f2fd; color: var(--accent-blue); }
-
-        .list {
-            padding: 8px 16px 100px;
-            background: #fff;
-            min-height: 60vh;
-        }
-        .cart-item {
-            display: flex;
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background 0.15s;
-            gap: 12px;
-        }
-        .cart-item:active { background: #f5f5f5; margin: 0 -16px; padding: 14px 16px; }
-        .cart-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-            font-weight: 700;
-        }
-        .cart-icon.ok { background: #E8F5E9; color: var(--ok); }
-        .cart-icon.minor { background: #FFF3E0; color: var(--minor); }
-        .cart-icon.unsafe { background: #FFEBEE; color: var(--unsafe); }
-        .cart-info { flex: 1; min-width: 0; }
-        .cart-id { font-weight: 600; font-size: 15px; letter-spacing: -0.2px; }
-        .cart-type { font-size: 13px; color: var(--text-secondary); }
-        .cart-meta { text-align: right; flex-shrink: 0; }
-        .status-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 4px;
-        }
-        .status-dot.ok { background: var(--ok); }
-        .status-dot.minor { background: var(--minor); }
-        .status-dot.unsafe { background: var(--unsafe); }
-        .status-label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .status-label.ok { color: var(--ok); }
-        .status-label.minor { color: var(--minor); }
-        .status-label.unsafe { color: var(--unsafe); }
-        .cart-location { font-size: 11px; color: #999; margin-top: 2px; }
-        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
-        .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            display: flex;
-            align-items: flex-end;
-            animation: fadeIn 0.2s;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal {
-            background: #fff;
-            width: 100%;
-            max-width: 480px;
-            margin: 0 auto;
-            border-radius: 16px 16px 0 0;
-            padding: 8px 0 24px;
-            animation: slideUp 0.3s ease;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .modal-handle {
-            width: 36px;
-            height: 4px;
-            background: #ddd;
-            border-radius: 2px;
-            margin: 0 auto 16px;
-        }
-        .modal-header { padding: 0 20px 16px; border-bottom: 1px solid var(--border); }
-        .modal-header h2 { font-size: 22px; font-weight: 700; }
-        .modal-header .modal-type { font-size: 14px; color: var(--text-secondary); }
-        .modal-body { padding: 16px 20px; }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #f5f5f5;
-            font-size: 14px;
-        }
-        .detail-label { color: var(--text-secondary); }
-        .detail-value { font-weight: 500; }
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            padding: 16px 20px;
-            flex-wrap: wrap;
-        }
-        .btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 14px 12px;
-            border: 2px solid transparent;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s;
-            text-align: center;
-            letter-spacing: -0.2px;
-        }
-        .btn:active { transform: scale(0.96); }
-        .btn:disabled { opacity: 0.5; pointer-events: none; }
-        .btn-ok { background: #E8F5E9; color: var(--ok); border-color: var(--ok); }
-        .btn-ok.active-btn { background: var(--ok); color: #fff; }
-        .btn-minor { background: #FFF3E0; color: var(--minor); border-color: var(--minor); }
-        .btn-minor.active-btn { background: var(--minor); color: #fff; }
-        .btn-unsafe { background: #FFEBEE; color: var(--unsafe); border-color: var(--unsafe); }
-        .btn-unsafe.active-btn { background: var(--unsafe); color: #fff; }
-        .btn-close {
-            width: calc(100% - 40px);
-            margin: 8px 20px;
-            padding: 14px;
-            background: #f5f5f5;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 480px;
-            background: #fff;
-            border-top: 1px solid var(--border);
-            display: flex;
-            z-index: 150;
-            box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
-        }
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 10px 4px 8px;
-            font-size: 10px;
-            color: #999;
-            cursor: pointer;
-            border: none;
-            background: none;
-            transition: color 0.2s;
-        }
-        .nav-item .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
-        .nav-item.active { color: var(--accent-blue); }
-
-        .qr-fab {
-            position: fixed;
-            bottom: 80px;
-            right: calc(50% - 210px);
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--accent-blue);
-            color: #fff;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(33,150,243,0.4);
-            z-index: 160;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        @media (max-width: 480px) { .qr-fab { right: 16px; } }
-
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            z-index: 300;
-            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
-            pointer-events: none;
-        }
-        @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
-        @keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
-
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #ccc;
-            border-top-color: var(--accent-blue);
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .search-container { padding:8px 14px; background:#fff; border-bottom:1px solid var(--border); }
+        .search-row { display:flex; gap:6px; }
+        .search-input { flex:1; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; background:#f9f9f9; outline:none; }
+        .filter-select { padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:12px; background:#f9f9f9; outline:none; max-width:120px; }
+        .stats-bar { display:flex; gap:4px; padding:6px 10px; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
+        .stat-card { flex:1; min-width:50px; text-align:center; padding:6px 2px; border-radius:6px; cursor:pointer; border:2px solid transparent; font-size:11px; }
+        .stat-card.active { border-color:var(--accent-blue); }
+        .stat-num { font-size:18px; font-weight:700; display:block; }
+        .stat-label { font-size:8px; color:#999; text-transform:uppercase; }
+        .stat-card.ok { background:#E8F5E9; } .stat-card.ok .stat-num { color:#4CAF50; }
+        .stat-card.minor { background:#FFF3E0; } .stat-card.minor .stat-num { color:#FF9800; }
+        .stat-card.unsafe { background:#FFEBEE; } .stat-card.unsafe .stat-num { color:#F44336; }
+        .stat-card.all { background:#E3F2FD; } .stat-card.all .stat-num { color:#0D47A1; }
+        .list { padding:4px 10px 80px; background:#fff; min-height:50vh; }
+        .cart-item { display:flex; align-items:center; padding:8px 0; border-bottom:1px solid #f0f0f0; cursor:pointer; gap:6px; font-size:12px; }
+        .cart-icon { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; font-weight:700; }
+        .cart-icon.OK { background:#E8F5E9; color:#4CAF50; } .cart-icon.Minor { background:#FFF3E0; color:#FF9800; } .cart-icon.Unsafe { background:#FFEBEE; color:#F44336; }
+        .cart-info { flex:1; min-width:0; }
+        .cart-id { font-weight:600; font-size:12px; } .cart-type { font-size:10px; color:#666; }
+        .cart-meta { text-align:right; }
+        .status-dot { display:inline-block; width:5px; height:5px; border-radius:50%; margin-right:2px; }
+        .status-dot.OK { background:#4CAF50; } .status-dot.Minor { background:#FF9800; } .status-dot.Unsafe { background:#F44336; }
+        .status-label { font-size:9px; font-weight:600; text-transform:uppercase; }
+        .status-label.OK { color:#4CAF50; } .status-label.Minor { color:#FF9800; } .status-label.Unsafe { color:#F44336; }
+        .cart-location { font-size:8px; color:#999; }
+        .pagination { display:flex; justify-content:center; gap:6px; padding:10px; background:#fff; }
+        .page-btn { padding:4px 10px; border:1px solid #ddd; border-radius:4px; background:#fff; font-size:11px; cursor:pointer; }
+        .page-btn.active { background:var(--accent-blue); color:#fff; border-color:var(--accent-blue); }
+        /* Modal */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:none; align-items:flex-end; }
+        .modal-overlay.show { display:flex; }
+        .modal { background:#fff; width:100%; max-width:480px; margin:0 auto; border-radius:14px 14px 0 0; padding:6px 0 18px; max-height:85vh; overflow-y:auto; }
+        .modal-handle { width:28px; height:4px; background:#ddd; border-radius:2px; margin:0 auto 10px; }
+        .modal-header { padding:0 18px 10px; border-bottom:1px solid #e0e0e0; }
+        .modal-header h2 { font-size:18px; font-weight:700; }
+        .modal-body { padding:10px 18px; }
+        .detail-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f5f5f5; font-size:12px; }
+        .detail-label { color:#666; } .detail-value { font-weight:500; }
+        .modal-actions { display:flex; gap:6px; padding:10px 18px; }
+        .btn { flex:1; padding:10px 4px; border:2px solid transparent; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; text-align:center; }
+        .btn-ok { background:#E8F5E9; color:#4CAF50; border-color:#4CAF50; } .btn-ok.active { background:#4CAF50; color:#fff; }
+        .btn-minor { background:#FFF3E0; color:#FF9800; border-color:#FF9800; } .btn-minor.active { background:#FF9800; color:#fff; }
+        .btn-unsafe { background:#FFEBEE; color:#F44336; border-color:#F44336; } .btn-unsafe.active { background:#F44336; color:#fff; }
+        .btn-close { width:calc(100% - 36px); margin:4px 18px; padding:10px; background:#f5f5f5; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#666; }
+        .tower-note { display:none; padding:0 18px 10px; }
+        .tower-note textarea { width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:11px; resize:vertical; min-height:40px; }
+        /* Scanner */
+        .scanner-overlay { position:fixed; inset:0; background:#000; z-index:500; display:none; flex-direction:column; }
+        .scanner-overlay.show { display:flex; }
+        .scanner-header { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#000; color:#fff; }
+        .scanner-close { background:rgba(255,255,255,0.2); border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; cursor:pointer; }
+        .scanner-container { flex:1; position:relative; overflow:hidden; }
+        #qr-reader { width:100%; height:100%; }
+        #qr-reader__dashboard_section_csr,#qr-reader__dashboard_section_swaplink { display:none!important; }
+        .scanner-footer { padding:12px; background:#000; color:#fff; text-align:center; }
+        .scanner-manual-btn { width:100%; padding:10px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); border-radius:6px; color:#fff; font-size:12px; font-weight:600; cursor:pointer; }
+        .scanner-frame { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:180px; height:180px; border:3px solid #2196F3; border-radius:14px; box-shadow:0 0 0 2000px rgba(0,0,0,0.5); pointer-events:none; z-index:502; }
+        .qr-fab { position:fixed; bottom:65px; right:10px; width:46px; height:46px; border-radius:50%; background:#2196F3; color:#fff; border:none; font-size:20px; cursor:pointer; box-shadow:0 4px 12px rgba(33,150,243,0.5); z-index:160; display:none; align-items:center; justify-content:center; }
+        .toast { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:8px 14px; border-radius:14px; font-size:11px; z-index:600; pointer-events:none; white-space:nowrap; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🚛 Baggage Cart Assets</h1>
-        <div class="sync-indicator" id="syncIndicator">
-            <span class="sync-dot" id="syncDot"></span>
-            <span id="syncText">Ready</span>
-        </div>
-    </div>
+<div class="login-screen" id="loginScreen">
+ <div class="login-card">
+   <div class="login-logo"><h1>🛫 GSE Health System</h1><p>Ground Support Equipment Monitoring</p></div>
+   <label>Select Role</label>
+   <div class="role-indicator" id="roleSelector">
+     <div class="role-card selected" data-role="ramp"><span class="role-icon">👷</span><span class="role-name">Ramp Agent</span><span class="role-desc">GSE Inspection & Status</span></div>
+     <div class="role-card" data-role="tower"><span class="role-icon">🗼</span><span class="role-name">Ramp Tower Controller</span><span class="role-desc">Oversight & Coordination</span></div>
+   </div>
+   <label for="userId">User ID</label>
+   <input type="text" id="userId" placeholder="e.g. RA-101 or RTC-001" autocomplete="off">
+   <label for="userPin">PIN</label>
+   <input type="password" id="userPin" placeholder="••••" maxlength="6" autocomplete="off">
+   <button class="login-btn" id="loginBtn">Sign In</button>
+   <div class="login-error" id="loginError"></div>
+   <p style="font-size:9px;color:#999;text-align:center;margin-top:10px;">Demo: RA-101 / 1234 | RTC-001 / 5678</p>
+ </div>
+</div>
 
-    <div class="search-container">
-        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search by Asset ID or Location...">
-    </div>
+<div class="app-container" id="appContainer">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:6px;"><h1>🛫 GSE Health</h1><span class="user-badge" id="userBadge">Ramp</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div class="sync-indicator"><span class="sync-dot" id="syncDot"></span><span id="syncText">Live</span></div><button class="logout-btn" id="logoutBtn">Logout</button></div>
+  </div>
+  <div class="search-container"><div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="🔍 Asset ID, Type, Location..."><select class="filter-select" id="typeFilter"><option value="all">All Types</option></select></div></div>
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card all active" data-tab="all"><span class="stat-num" id="statAll">0</span><span class="stat-label">Total Fleet</span></div>
+    <div class="stat-card ok" data-tab="OK"><span class="stat-num" id="statOk">0</span><span class="stat-label">OK</span></div>
+    <div class="stat-card minor" data-tab="Minor"><span class="stat-num" id="statMinor">0</span><span class="stat-label">Minor</span></div>
+    <div class="stat-card unsafe" data-tab="Unsafe"><span class="stat-num" id="statUnsafe">0</span><span class="stat-label">Unsafe</span></div>
+  </div>
+  <div class="list" id="cartList"><div class="empty-state"><p>Loading equipment...</p></div></div>
+  <div class="pagination" id="pagination"></div>
+</div>
 
-    <div class="tabs" id="tabs">
-        <button class="tab active" data-tab="all">All<span class="tab-badge" id="count-all">-</span></button>
-        <button class="tab" data-tab="unsafe">Unsafe<span class="tab-badge" id="count-unsafe">-</span></button>
-        <button class="tab" data-tab="minor">Minor Issue<span class="tab-badge" id="count-minor">-</span></button>
-        <button class="tab" data-tab="ok">OK Assets<span class="tab-badge" id="count-ok">-</span></button>
-    </div>
+<button class="qr-fab" id="qrFab">📷</button>
 
-    <div class="list" id="cartList">
-        <div class="empty-state">
-            <div class="spinner"></div>
-            <p style="margin-top:12px;">Loading assets...</p>
-        </div>
-    </div>
+<div class="modal-overlay" id="modalOverlay">
+ <div class="modal">
+   <div class="modal-handle"></div>
+   <div class="modal-header"><h2 id="modalTitle">-</h2><span style="font-size:11px;color:#666" id="modalType">-</span></div>
+   <div class="modal-body">
+     <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" id="modalStatus">-</span></div>
+     <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value" id="modalLocation">-</span></div>
+     <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value" id="modalUpdated">-</span></div>
+     <div class="detail-row"><span class="detail-label">Issue Count</span><span class="detail-value" id="modalIssues">0</span></div>
+     <div class="detail-row"><span class="detail-label">Inspector</span><span class="detail-value" id="modalInspector">-</span></div>
+     <div class="detail-row" id="modalNotesRow"><span class="detail-label">Notes</span><span class="detail-value" id="modalNotes">-</span></div>
+   </div>
+   <div class="tower-note" id="towerNoteSection"><label style="font-size:10px;font-weight:600;">Coordination Note:</label><textarea id="towerNoteInput" placeholder="Enter note for crew..."></textarea></div>
+   <div class="modal-actions" id="modalActions">
+     <button class="btn btn-ok" id="btnOk">✓ OK</button>
+     <button class="btn btn-minor" id="btnMinor">⚠ Minor</button>
+     <button class="btn btn-unsafe" id="btnUnsafe">✕ Unsafe</button>
+   </div>
+   <button class="btn-close" id="btnClose">Close</button>
+ </div>
+</div>
 
-    <button class="qr-fab" id="qrFab" title="Scan QR Code">📷</button>
+<div class="scanner-overlay" id="scannerOverlay">
+ <div class="scanner-header"><h3>📷 Scan QR</h3><button class="scanner-close" id="scannerClose">✕</button></div>
+ <div class="scanner-container"><div id="qr-reader"></div><div class="scanner-frame"></div></div>
+ <div class="scanner-footer"><p style="font-size:10px;">Point at equipment QR tag</p><button class="scanner-manual-btn" id="scannerManual">⌨️ Enter ID Manually</button></div>
+</div>
 
-    <div class="bottom-nav">
-        <button class="nav-item active" data-nav="all"><span class="nav-icon">📋</span>All Assets</button>
-        <button class="nav-item" data-nav="unsafe"><span class="nav-icon">🔴</span>Unsafe</button>
-        <button class="nav-item" data-nav="minor"><span class="nav-icon">🟠</span>Minor Issue</button>
-        <button class="nav-item" data-nav="ok"><span class="nav-icon">🟢</span>OK Assets</button>
-    </div>
+<div id="toastContainer"></div>
 
-    <div class="modal-overlay" id="modalOverlay" style="display:none;">
-        <div class="modal" id="modal">
-            <div class="modal-handle"></div>
-            <div class="modal-header">
-                <h2 id="modalTitle">CART-001</h2>
-                <span class="modal-type">Baggage Cart</span>
-            </div>
-            <div class="modal-body">
-                <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" id="modalStatus">-</span></div>
-                <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value" id="modalUpdated">-</span></div>
-                <div class="detail-row"><span class="detail-label">Issue Count</span><span class="detail-value" id="modalIssues">-</span></div>
-                <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value" id="modalLocation">-</span></div>
-                <div class="detail-row" id="modalNotesRow" style="display:none;"><span class="detail-label">Notes</span><span class="detail-value" id="modalNotes">-</span></div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-ok" id="btnOk" disabled>✓ OK</button>
-                <button class="btn btn-minor" id="btnMinor" disabled>⚠ Minor Issue</button>
-                <button class="btn btn-unsafe" id="btnUnsafe" disabled>✕ Unsafe</button>
-            </div>
-            <button class="btn-close" id="btnClose">Close</button>
-        </div>
-    </div>
+<script>
+(function(){
+const API_URL = 'https://script.google.com/macros/s/AKfycbxDK9_pcR0Jnw4So20g53M0ZFaelOh3ioyfXFRfP2KmHk_JjlZPPw1peAcBkCD_SxV8IQ/exec';
+const PAGE_SIZE = 20;
 
-    <div id="toastContainer"></div>
+// User DB
+const USERS = {
+  'RA-101':{pin:'1234',role:'ramp',name:'Marcus "Apex" Williams',station:'ORD'},
+  'RA-102':{pin:'1234',role:'ramp',name:'Luis "Ghost" Rodriguez',station:'ORD'},
+  'RTC-001':{pin:'5678',role:'tower',name:'Sarah "Eagle" Mitchell',station:'ORD Tower'},
+  'RTC-002':{pin:'5678',role:'tower',name:'David "Sentinel" Chen',station:'ORD Tower'}
+};
 
-    <script>
-        // ============ CONFIGURATION ============
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxDK9_pcR0Jnw4So20g53M0ZFaelOh3ioyfXFRfP2KmHk_JjlZPPw1peAcBkCD_SxV8IQ/exec';
-        
-        // ============ STATE ============
-        let cartData = [];
-        let currentTab = 'all';
-        let currentCartId = null;
-        let searchQuery = '';
+let currentUser = null;
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+let currentTab = 'all';
+let searchQuery = '';
+let typeFilter = 'all';
+let html5QrCode = null;
+let scannerActive = false;
+let currentAssetId = null;
 
-        // ============ API FUNCTIONS ============
-        async function fetchAssets() {
-            setSyncStatus('syncing', 'Syncing...');
-            try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error('Network error');
-                const data = await response.json();
-                cartData = data;
-                setSyncStatus('ok', 'Live');
-                renderList();
-            } catch (error) {
-                console.error('Fetch error:', error);
-                setSyncStatus('error', 'Offline');
-                const cached = localStorage.getItem('baggageCartData');
-                if (cached) {
-                    cartData = JSON.parse(cached);
-                    renderList();
-                    showToast('⚠️ Using cached data - offline mode');
-                } else {
-                    document.getElementById('cartList').innerHTML = `
-                        <div class="empty-state">
-                            <div class="emoji">🔌</div>
-                            <p>Cannot connect to server</p>
-                            <p style="font-size:13px;margin-top:4px;">Check your internet connection</p>
-                        </div>`;
-                }
-            }
-        }
+// ========== LOGIN ==========
+document.getElementById('roleSelector').addEventListener('click',(e)=>{
+  const card = e.target.closest('.role-card');
+  if(!card) return;
+  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+});
 
-        async function updateAssetOnSheet(cartId, newStatus, issueCount, notes) {
-            setSyncStatus('syncing', 'Saving...');
-            const now = new Date();
-            const formatted = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+document.getElementById('loginBtn').addEventListener('click',()=>{
+  const userId = document.getElementById('userId').value.trim().toUpperCase();
+  const pin = document.getElementById('userPin').value.trim();
+  const role = document.querySelector('.role-card.selected')?.dataset.role;
+  const errorEl = document.getElementById('loginError');
+  if(!userId || !pin) { errorEl.textContent='Enter User ID and PIN'; return; }
+  const user = USERS[userId];
+  if(!user) { errorEl.textContent='User not found'; return; }
+  if(user.pin !== pin) { errorEl.textContent='Invalid PIN'; return; }
+  if(user.role !== role) { errorEl.textContent='Role mismatch'; return; }
+  currentUser = user;
+  localStorage.setItem('gse_user', JSON.stringify(user));
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appContainer').style.display='block';
+  document.getElementById('qrFab').style.display='flex';
+  const badge = document.getElementById('userBadge');
+  badge.textContent = user.role==='ramp'?'Ramp Agent':'Tower Controller';
+  badge.className = 'user-badge '+user.role;
+  initApp();
+});
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: cartId,
-                        status: newStatus,
-                        lastUpdated: formatted,
-                        issueCount: issueCount,
-                        notes: notes
-                    })
-                });
-                
-                // Update local data
-                const cart = cartData.find(c => c.id === cartId);
-                if (cart) {
-                    cart.status = newStatus;
-                    cart.lastUpdated = formatted;
-                    cart.issueCount = issueCount;
-                    cart.notes = notes;
-                }
-                
-                localStorage.setItem('baggageCartData', JSON.stringify(cartData));
-                setSyncStatus('ok', 'Saved ✓');
-                setTimeout(() => setSyncStatus('ok', 'Live'), 2000);
-                renderList();
-                return true;
-            } catch (error) {
-                console.error('Update error:', error);
-                setSyncStatus('error', 'Save failed');
-                showToast('❌ Failed to sync. Try again.');
-                // Still update locally
-                const cart = cartData.find(c => c.id === cartId);
-                if (cart) {
-                    cart.status = newStatus;
-                    cart.lastUpdated = formatted;
-                    cart.issueCount = issueCount;
-                    cart.notes = notes;
-                }
-                localStorage.setItem('baggageCartData', JSON.stringify(cartData));
-                renderList();
-                return false;
-            }
-        }
+// ========== APP INIT ==========
+function initApp(){
+  loadAssets();
+  populateTypeFilter();
+}
 
-        function setSyncStatus(state, text) {
-            const dot = document.getElementById('syncDot');
-            const textEl = document.getElementById('syncText');
-            dot.className = 'sync-dot';
-            if (state === 'syncing') dot.classList.add('syncing');
-            if (state === 'error') dot.classList.add('error');
-            textEl.textContent = text;
-        }
+async function loadAssets(){
+  setSyncStatus('syncing','Loading...');
+  try{
+    const resp = await fetch(API_URL);
+    const text = await resp.text();
+    const data = JSON.parse(text);
+    if(Array.isArray(data) && data.length>0){
+      allData = data;
+    } else throw new Error('Empty data');
+  } catch(e){
+    // fallback localStorage or embedded
+    const cached = localStorage.getItem('gse_all_data');
+    if(cached) allData = JSON.parse(cached);
+    else allData = []; // will show empty
+  }
+  if(allData.length>0) localStorage.setItem('gse_all_data', JSON.stringify(allData));
+  applyFilters();
+}
 
-        // ============ RENDER ============
-        function getFilteredData() {
-            let filtered = [...cartData];
-            if (currentTab === 'unsafe') filtered = filtered.filter(c => c.status === 'Unsafe');
-            else if (currentTab === 'minor') filtered = filtered.filter(c => c.status === 'Minor');
-            else if (currentTab === 'ok') filtered = filtered.filter(c => c.status === 'OK');
-            
-            if (searchQuery.trim()) {
-                const q = searchQuery.toLowerCase().trim();
-                filtered = filtered.filter(c =>
-                    c.id.toLowerCase().includes(q) ||
-                    (c.location && c.location.toLowerCase().includes(q)) ||
-                    (c.notes && c.notes.toLowerCase().includes(q))
-                );
-            }
-            return filtered;
-        }
+function populateTypeFilter(){
+  const types = [...new Set(allData.map(a=>a.type))].sort();
+  const sel = document.getElementById('typeFilter');
+  sel.innerHTML = '<option value="all">All Types</option>';
+  types.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
+}
 
-        function renderList() {
-            const listEl = document.getElementById('cartList');
-            const filtered = getFilteredData();
+// ========== SYNC ==========
+function setSyncStatus(state,text){
+  document.getElementById('syncDot').className = 'sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
+  document.getElementById('syncText').textContent = text;
+}
 
-            if (cartData.length === 0) {
-                listEl.innerHTML = `<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px;">Loading...</p></div>`;
-                return;
-            }
+// ========== FILTER & PAGINATE ==========
+function applyFilters(){
+  let filtered = allData.slice();
+  if(currentTab!=='all') filtered = filtered.filter(a=>a.status===currentTab);
+  if(typeFilter!=='all') filtered = filtered.filter(a=>a.type===typeFilter);
+  if(searchQuery.trim()){
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(a=> a.id.toLowerCase().includes(q) || (a.location||'').toLowerCase().includes(q) || (a.notes||'').toLowerCase().includes(q) );
+  }
+  filteredData = filtered;
+  currentPage = 1;
+  renderPage();
+  updateStats();
+}
 
-            if (filtered.length === 0) {
-                listEl.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No assets found</p></div>`;
-            } else {
-                listEl.innerHTML = filtered.map(cart => `
-                    <div class="cart-item" onclick="openDetail('${cart.id}')">
-                        <div class="cart-icon ${(cart.status || 'ok').toLowerCase()}">
-                            ${cart.status === 'OK' ? '✓' : cart.status === 'Minor' ? '!' : '✕'}
-                        </div>
-                        <div class="cart-info">
-                            <div class="cart-id">${cart.id}</div>
-                            <div class="cart-type">${cart.type || 'Baggage Cart'}</div>
-                        </div>
-                        <div class="cart-meta">
-                            <div>
-                                <span class="status-dot ${(cart.status || 'ok').toLowerCase()}"></span>
-                                <span class="status-label ${(cart.status || 'ok').toLowerCase()}">${cart.status || 'OK'}</span>
-                            </div>
-                            <div class="cart-location">📍 ${cart.location || 'Unknown'}</div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-            updateCounts();
-        }
+function renderPage(){
+  const start = (currentPage-1)*PAGE_SIZE;
+  const pageItems = filteredData.slice(start, start+PAGE_SIZE);
+  const listEl = document.getElementById('cartList');
+  if(pageItems.length===0){
+    listEl.innerHTML = '<div class="empty-state"><p>No equipment found</p></div>';
+  } else {
+    listEl.innerHTML = pageItems.map(a=>{
+      const st = a.status||'OK';
+      return `<div class="cart-item" data-id="${a.id}">
+        <div class="cart-icon ${st}">${st==='OK'?'✓':st==='Minor'?'!':'✕'}</div>
+        <div class="cart-info"><div class="cart-id">${a.id}</div><div class="cart-type">${a.type||'Unknown'}</div></div>
+        <div class="cart-meta"><span class="status-dot ${st}"></span><span class="status-label ${st}">${st}</span><br><span class="cart-location">📍 ${a.location||'?'}</span></div>
+      </div>`;
+    }).join('');
+  }
+  renderPagination();
+  document.querySelectorAll('.cart-item').forEach(el=> el.addEventListener('click',()=> openDetail(el.dataset.id)));
+}
 
-        function updateCounts() {
-            const all = cartData.length;
-            const unsafe = cartData.filter(c => c.status === 'Unsafe').length;
-            const minor = cartData.filter(c => c.status === 'Minor').length;
-            const ok = cartData.filter(c => c.status === 'OK').length;
-            document.getElementById('count-all').textContent = all;
-            document.getElementById('count-unsafe').textContent = unsafe;
-            document.getElementById('count-minor').textContent = minor;
-            document.getElementById('count-ok').textContent = ok;
-        }
+function renderPagination(){
+  const totalPages = Math.ceil(filteredData.length/PAGE_SIZE);
+  const pag = document.getElementById('pagination');
+  if(totalPages<=1){ pag.innerHTML=''; return; }
+  let html = '';
+  for(let i=1;i<=totalPages;i++){
+    html += `<button class="page-btn${i===currentPage?' active':''}" data-page="${i}">${i}</button>`;
+  }
+  pag.innerHTML = html;
+  pag.querySelectorAll('.page-btn').forEach(b=> b.addEventListener('click',function(){
+    currentPage = parseInt(this.dataset.page);
+    renderPage();
+    window.scrollTo(0,0);
+  }));
+}
 
-        // ============ MODAL ============
-        function openDetail(cartId) {
-            const cart = cartData.find(c => c.id === cartId);
-            if (!cart) return;
-            currentCartId = cartId;
-            
-            document.getElementById('modalTitle').textContent = cart.id;
-            document.getElementById('modalStatus').textContent = cart.status || 'OK';
-            document.getElementById('modalUpdated').textContent = cart.lastUpdated || '-';
-            document.getElementById('modalIssues').textContent = cart.issueCount || 0;
-            document.getElementById('modalLocation').textContent = cart.location || '-';
+function updateStats(){
+  document.getElementById('statAll').textContent = allData.length;
+  document.getElementById('statOk').textContent = allData.filter(a=>a.status==='OK').length;
+  document.getElementById('statMinor').textContent = allData.filter(a=>a.status==='Minor').length;
+  document.getElementById('statUnsafe').textContent = allData.filter(a=>a.status==='Unsafe').length;
+}
 
-            const notesRow = document.getElementById('modalNotesRow');
-            if (cart.notes) {
-                notesRow.style.display = 'flex';
-                document.getElementById('modalNotes').textContent = cart.notes;
-            } else {
-                notesRow.style.display = 'none';
-            }
+// ========== MODAL ==========
+function openDetail(assetId){
+  const asset = allData.find(a=>a.id===assetId);
+  if(!asset) return;
+  currentAssetId = assetId;
+  document.getElementById('modalTitle').textContent = asset.id;
+  document.getElementById('modalType').textContent = asset.type||'';
+  document.getElementById('modalStatus').textContent = asset.status||'OK';
+  document.getElementById('modalLocation').textContent = asset.location||'';
+  document.getElementById('modalUpdated').textContent = asset.lastUpdated||'';
+  document.getElementById('modalIssues').textContent = asset.issueCount||0;
+  document.getElementById('modalInspector').textContent = asset.inspector||currentUser?.name||'';
+  document.getElementById('modalNotes').textContent = asset.notes||'-';
+  document.getElementById('modalNotesRow').style.display = asset.notes?'flex':'none';
+  // tower note section
+  document.getElementById('towerNoteSection').style.display = currentUser?.role==='tower'?'block':'none';
+  document.getElementById('towerNoteInput').value = '';
+  // action buttons - all roles can update status
+  document.querySelectorAll('.modal-actions .btn').forEach(b=>b.classList.remove('active'));
+  if(asset.status==='OK') document.getElementById('btnOk').classList.add('active');
+  if(asset.status==='Minor') document.getElementById('btnMinor').classList.add('active');
+  if(asset.status==='Unsafe') document.getElementById('btnUnsafe').classList.add('active');
+  document.getElementById('modalOverlay').classList.add('show');
+}
 
-            document.querySelectorAll('.modal-actions .btn').forEach(b => {
-                b.disabled = false;
-                b.classList.remove('active-btn');
-            });
-            const status = (cart.status || 'OK').toLowerCase();
-            if (status === 'ok') document.getElementById('btnOk').classList.add('active-btn');
-            if (status === 'minor') document.getElementById('btnMinor').classList.add('active-btn');
-            if (status === 'unsafe') document.getElementById('btnUnsafe').classList.add('active-btn');
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+  currentAssetId = null;
+}
 
-            document.getElementById('modalOverlay').style.display = 'flex';
-        }
+async function updateStatus(newStatus){
+  if(!currentAssetId) return;
+  const asset = allData.find(a=>a.id===currentAssetId);
+  if(!asset) return;
+  const now = new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const formatted = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const newCount = newStatus==='Unsafe' ? (asset.issueCount||0)+1 : newStatus==='Minor' ? Math.max(1,(asset.issueCount||0)) : (asset.issueCount||0);
+  // update local
+  asset.status = newStatus;
+  asset.lastUpdated = formatted;
+  asset.issueCount = newCount;
+  asset.inspector = currentUser?.name||'Unknown';
+  if(currentUser?.role==='tower'){
+    const note = document.getElementById('towerNoteInput').value.trim();
+    if(note) asset.notes = note;
+  }
+  localStorage.setItem('gse_all_data', JSON.stringify(allData));
+  // attempt sync
+  setSyncStatus('syncing','Saving...');
+  try{
+    await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(asset)});
+    setSyncStatus('ok','Saved');
+  }catch(e){ setSyncStatus('error','Local only'); }
+  applyFilters();
+  openDetail(currentAssetId);
+  showToast(`✅ ${currentAssetId} → ${newStatus}`);
+  setTimeout(()=>setSyncStatus('ok','Live'),2000);
+}
 
-        function closeModal() {
-            document.getElementById('modalOverlay').style.display = 'none';
-            currentCartId = null;
-        }
+// ========== EVENT LISTENERS ==========
+document.getElementById('searchInput').addEventListener('input',(e)=>{ searchQuery=e.target.value; applyFilters(); });
+document.getElementById('typeFilter').addEventListener('change',(e)=>{ typeFilter=e.target.value; applyFilters(); });
+document.getElementById('statsBar').addEventListener('click',(e)=>{
+  const card = e.target.closest('.stat-card');
+  if(!card) return;
+  currentTab = card.dataset.tab;
+  document.querySelectorAll('.stat-card').forEach(c=>c.classList.remove('active'));
+  card.classList.add('active');
+  applyFilters();
+});
+document.getElementById('modalOverlay').addEventListener('click',(e)=>{ if(e.target===document.getElementById('modalOverlay')) closeModal(); });
+document.getElementById('btnClose').addEventListener('click',closeModal);
+document.getElementById('btnOk').addEventListener('click',()=>updateStatus('OK'));
+document.getElementById('btnMinor').addEventListener('click',()=>updateStatus('Minor'));
+document.getElementById('btnUnsafe').addEventListener('click',()=>updateStatus('Unsafe'));
+document.getElementById('logoutBtn').addEventListener('click',()=>{
+  localStorage.removeItem('gse_user');
+  location.reload();
+});
 
-        async function updateStatus(newStatus) {
-            if (!currentCartId) return;
-            const cart = cartData.find(c => c.id === currentCartId);
-            if (!cart) return;
+// ========== QR SCANNER ==========
+document.getElementById('qrFab').addEventListener('click',openScanner);
+document.getElementById('scannerClose').addEventListener('click',closeScanner);
+document.getElementById('scannerManual').addEventListener('click',()=>{ closeScanner(); manualEntry(); });
 
-            document.querySelectorAll('.modal-actions .btn').forEach(b => b.disabled = true);
-            
-            const newIssueCount = newStatus === 'Unsafe' ? (cart.issueCount || 0) + 1 :
-                                  newStatus === 'Minor' ? Math.max(1, (cart.issueCount || 0)) : (cart.issueCount || 0);
-            
-            const success = await updateAssetOnSheet(currentCartId, newStatus, newIssueCount, cart.notes || '');
-            
-            showToast(`✅ ${currentCartId} → ${newStatus}`);
-            openDetail(currentCartId);
-        }
+function openScanner(){
+  document.getElementById('scannerOverlay').classList.add('show');
+  if(!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
+  html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:180,height:180}}, onScanSuccess, ()=>{}).then(()=>scannerActive=true).catch(err=>{ showToast('Camera access denied'); closeScanner(); });
+}
+function closeScanner(){
+  if(html5QrCode && scannerActive){ html5QrCode.stop().catch(()=>{}); scannerActive=false; }
+  document.getElementById('scannerOverlay').classList.remove('show');
+}
+function onScanSuccess(decodedText){
+  if(scannerActive){ html5QrCode.stop().catch(()=>{}); scannerActive=false; }
+  document.getElementById('scannerOverlay').classList.remove('show');
+  let id = decodedText.trim().toUpperCase().replace(/[^A-Z0-9\-]/g,'');
+  const asset = allData.find(a=>a.id===id);
+  if(asset){ openDetail(id); showToast('✅ Found: '+id); }
+  else { showToast('❌ Not found: '+id); }
+}
+function manualEntry(){
+  const id = prompt('Enter Asset ID:','');
+  if(id){
+    const clean = id.trim().toUpperCase().replace(/[^A-Z0-9\-]/g,'');
+    const asset = allData.find(a=>a.id===clean);
+    if(asset) openDetail(clean); else showToast('❌ Not found');
+  }
+}
 
-        // ============ TOAST ============
-        function showToast(message) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
+// ========== TOAST ==========
+function showToast(msg){
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className='toast'; t.textContent=msg; c.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
 
-        // ============ QR SCAN ============
-        function simulateQRScan() {
-            const cartId = prompt('📷 Scan QR Code\n\nEnter Cart ID (e.g., CART-001):');
-            if (cartId) {
-                const normalized = cartId.toUpperCase().trim();
-                const cart = cartData.find(c => c.id === normalized);
-                if (cart) {
-                    openDetail(normalized);
-                } else {
-                    showToast('❌ Asset not found: ' + normalized);
-                }
-            }
-        }
-
-        // ============ EVENT LISTENERS ============
-        document.getElementById('tabs').addEventListener('click', (e) => {
-            const tab = e.target.closest('.tab');
-            if (!tab) return;
-            currentTab = tab.dataset.tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-            const navMatch = document.querySelector(`.bottom-nav .nav-item[data-nav="${currentTab}"]`);
-            if (navMatch) navMatch.classList.add('active');
-            renderList();
-        });
-
-        document.querySelector('.bottom-nav').addEventListener('click', (e) => {
-            const nav = e.target.closest('.nav-item');
-            if (!nav) return;
-            currentTab = nav.dataset.nav;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            const tabMatch = document.querySelector(`.tab[data-tab="${currentTab}"]`);
-            if (tabMatch) tabMatch.classList.add('active');
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-            nav.classList.add('active');
-            renderList();
-        });
-
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            searchQuery = e.target.value;
-            renderList();
-        });
-
-        document.getElementById('modalOverlay').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('modalOverlay')) closeModal();
-        });
-        document.getElementById('btnClose').addEventListener('click', closeModal);
-        document.getElementById('btnOk').addEventListener('click', () => updateStatus('OK'));
-        document.getElementById('btnMinor').addEventListener('click', () => updateStatus('Minor'));
-        document.getElementById('btnUnsafe').addEventListener('click', () => updateStatus('Unsafe'));
-        document.getElementById('qrFab').addEventListener('click', simulateQRScan);
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'q' && e.ctrlKey) { e.preventDefault(); simulateQRScan(); }
-        });
-
-        // ============ INIT ============
-        fetchAssets();
-        setInterval(fetchAssets, 30000);
-
-        console.log('🚛 Baggage Cart Health System Ready');
-        console.log('🔗 Connected to Google Sheets');
-        console.log('📱 Tap QR button or Ctrl+Q to simulate scan');
-    </script>
+// ========== INIT LOGIN CHECK ==========
+const savedUser = localStorage.getItem('gse_user');
+if(savedUser){
+  currentUser = JSON.parse(savedUser);
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appContainer').style.display='block';
+  document.getElementById('qrFab').style.display='flex';
+  const badge = document.getElementById('userBadge');
+  badge.textContent = currentUser.role==='ramp'?'Ramp Agent':'Tower Controller';
+  badge.className = 'user-badge '+currentUser.role;
+  initApp();
+} else {
+  document.getElementById('appContainer').style.display='none';
+  document.getElementById('qrFab').style.display='none';
+}
+})();
+</script>
 </body>
 </html>
