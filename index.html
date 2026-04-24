@@ -2,247 +2,683 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroLoad 3D - B747 Cargo Optimizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Baggage Cart Health</title>
     <style>
         :root {
-            --bg: #121212;
-            --panel: #1e1e1e;
-            --accent: #007bff;
-            --text: #e0e0e0;
+            --bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+            --ok: #4CAF50;
+            --minor: #FF9800;
+            --unsafe: #F44336;
+            --accent-blue: #2196F3;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --radius: 10px;
         }
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; display: flex; }
-        
-        /* UI Panel */
-        #ui-panel { width: 350px; height: 100vh; background: var(--panel); border-right: 1px solid #333; padding: 20px; box-sizing: border-box; overflow-y: auto; z-index: 10; }
-        h2 { margin-top: 0; color: var(--accent); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
-        .input-group { margin-bottom: 15px; background: #2a2a2a; padding: 10px; border-radius: 4px; }
-        label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #aaa; }
-        input { width: 80px; background: #333; border: 1px solid #444; color: white; padding: 5px; border-radius: 3px; }
-        button { cursor: pointer; background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 4px; width: 100%; font-weight: bold; margin-top: 10px; transition: opacity 0.2s; }
-        button:hover { opacity: 0.8; }
-        
-        /* Stats Display */
-        #stats { margin-top: 20px; font-family: monospace; font-size: 0.9rem; background: #000; padding: 15px; border-radius: 5px; border-left: 3px solid var(--accent); }
-        .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .warning { color: #ff4d4d; font-weight: bold; }
 
-        /* Canvas */
-        #viewport { flex-grow: 1; height: 100vh; position: relative; }
-        .label-3d { position: absolute; bottom: 10px; right: 10px; color: #666; font-size: 0.7rem; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .header {
+            background: #fff;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+        .sync-indicator {
+            font-size: 11px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .sync-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4CAF50;
+        }
+        .sync-dot.syncing { background: #FF9800; animation: pulse 1s infinite; }
+        .sync-dot.error { background: #F44336; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        .search-container {
+            padding: 12px 16px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            background: #f9f9f9;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .search-input:focus { border-color: var(--accent-blue); background: #fff; }
+
+        .tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 56px;
+            z-index: 99;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+        }
+        .tab.active { color: var(--text); border-bottom-color: var(--accent-blue); }
+        .tab-badge {
+            display: inline-block;
+            background: #eee;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 11px;
+            margin-left: 4px;
+            font-weight: 500;
+        }
+        .tab.active .tab-badge { background: #e3f2fd; color: var(--accent-blue); }
+
+        .list {
+            padding: 8px 16px 100px;
+            background: #fff;
+            min-height: 60vh;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.15s;
+            gap: 12px;
+        }
+        .cart-item:active { background: #f5f5f5; margin: 0 -16px; padding: 14px 16px; }
+        .cart-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+        .cart-icon.ok { background: #E8F5E9; color: var(--ok); }
+        .cart-icon.minor { background: #FFF3E0; color: var(--minor); }
+        .cart-icon.unsafe { background: #FFEBEE; color: var(--unsafe); }
+        .cart-info { flex: 1; min-width: 0; }
+        .cart-id { font-weight: 600; font-size: 15px; letter-spacing: -0.2px; }
+        .cart-type { font-size: 13px; color: var(--text-secondary); }
+        .cart-meta { text-align: right; flex-shrink: 0; }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .status-dot.ok { background: var(--ok); }
+        .status-dot.minor { background: var(--minor); }
+        .status-dot.unsafe { background: var(--unsafe); }
+        .status-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-label.ok { color: var(--ok); }
+        .status-label.minor { color: var(--minor); }
+        .status-label.unsafe { color: var(--unsafe); }
+        .cart-location { font-size: 11px; color: #999; margin-top: 2px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+        .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            display: flex;
+            align-items: flex-end;
+            animation: fadeIn 0.2s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal {
+            background: #fff;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            border-radius: 16px 16px 0 0;
+            padding: 8px 0 24px;
+            animation: slideUp 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-handle {
+            width: 36px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+        .modal-header { padding: 0 20px 16px; border-bottom: 1px solid var(--border); }
+        .modal-header h2 { font-size: 22px; font-weight: 700; }
+        .modal-header .modal-type { font-size: 14px; color: var(--text-secondary); }
+        .modal-body { padding: 16px 20px; }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 14px;
+        }
+        .detail-label { color: var(--text-secondary); }
+        .detail-value { font-weight: 500; }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            padding: 16px 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 14px 12px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+            letter-spacing: -0.2px;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn:disabled { opacity: 0.5; pointer-events: none; }
+        .btn-ok { background: #E8F5E9; color: var(--ok); border-color: var(--ok); }
+        .btn-ok.active-btn { background: var(--ok); color: #fff; }
+        .btn-minor { background: #FFF3E0; color: var(--minor); border-color: var(--minor); }
+        .btn-minor.active-btn { background: var(--minor); color: #fff; }
+        .btn-unsafe { background: #FFEBEE; color: var(--unsafe); border-color: var(--unsafe); }
+        .btn-unsafe.active-btn { background: var(--unsafe); color: #fff; }
+        .btn-close {
+            width: calc(100% - 40px);
+            margin: 8px 20px;
+            padding: 14px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: #fff;
+            border-top: 1px solid var(--border);
+            display: flex;
+            z-index: 150;
+            box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+        }
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px 4px 8px;
+            font-size: 10px;
+            color: #999;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: color 0.2s;
+        }
+        .nav-item .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+        .nav-item.active { color: var(--accent-blue); }
+
+        .qr-fab {
+            position: fixed;
+            bottom: 80px;
+            right: calc(50% - 210px);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            color: #fff;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(33,150,243,0.4);
+            z-index: 160;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 480px) { .qr-fab { right: 16px; } }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 300;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+            pointer-events: none;
+        }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
+        @keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ccc;
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div id="ui-panel">
-    <h2>AeroLoad B747-400F</h2>
-    <div class="input-group">
-        <label>Cargo Type A (L x W x H - Weight)</label>
-        <div style="display: flex; gap: 5px;">
-            <input type="number" id="l1" value="3.1">
-            <input type="number" id="w1" value="2.4">
-            <input type="number" id="h1" value="2.4">
-        </div>
-        <div style="display: flex; gap: 5px; margin-top: 5px;">
-            <input type="number" id="wt1" value="2500" title="Weight (kg)">
-            <input type="number" id="q1" value="12" title="Quantity">
+    <div class="header">
+        <h1>🚛 Baggage Cart Assets</h1>
+        <div class="sync-indicator" id="syncIndicator">
+            <span class="sync-dot" id="syncDot"></span>
+            <span id="syncText">Ready</span>
         </div>
     </div>
 
-    <div class="input-group">
-        <label>Cargo Type B (Heavy/Small)</label>
-        <div style="display: flex; gap: 5px;">
-            <input type="number" id="l2" value="1.2">
-            <input type="number" id="w2" value="1.2">
-            <input type="number" id="h2" value="1.0">
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search by Asset ID or Location...">
+    </div>
+
+    <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="all">All<span class="tab-badge" id="count-all">-</span></button>
+        <button class="tab" data-tab="unsafe">Unsafe<span class="tab-badge" id="count-unsafe">-</span></button>
+        <button class="tab" data-tab="minor">Minor Issue<span class="tab-badge" id="count-minor">-</span></button>
+        <button class="tab" data-tab="ok">OK Assets<span class="tab-badge" id="count-ok">-</span></button>
+    </div>
+
+    <div class="list" id="cartList">
+        <div class="empty-state">
+            <div class="spinner"></div>
+            <p style="margin-top:12px;">Loading assets...</p>
         </div>
-        <div style="display: flex; gap: 5px; margin-top: 5px;">
-            <input type="number" id="wt2" value="4000" title="Weight (kg)">
-            <input type="number" id="q2" value="8" title="Quantity">
+    </div>
+
+    <button class="qr-fab" id="qrFab" title="Scan QR Code">📷</button>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" data-nav="all"><span class="nav-icon">📋</span>All Assets</button>
+        <button class="nav-item" data-nav="unsafe"><span class="nav-icon">🔴</span>Unsafe</button>
+        <button class="nav-item" data-nav="minor"><span class="nav-icon">🟠</span>Minor Issue</button>
+        <button class="nav-item" data-nav="ok"><span class="nav-icon">🟢</span>OK Assets</button>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">
+        <div class="modal" id="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h2 id="modalTitle">CART-001</h2>
+                <span class="modal-type">Baggage Cart</span>
+            </div>
+            <div class="modal-body">
+                <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" id="modalStatus">-</span></div>
+                <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value" id="modalUpdated">-</span></div>
+                <div class="detail-row"><span class="detail-label">Issue Count</span><span class="detail-value" id="modalIssues">-</span></div>
+                <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value" id="modalLocation">-</span></div>
+                <div class="detail-row" id="modalNotesRow" style="display:none;"><span class="detail-label">Notes</span><span class="detail-value" id="modalNotes">-</span></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ok" id="btnOk" disabled>✓ OK</button>
+                <button class="btn btn-minor" id="btnMinor" disabled>⚠ Minor Issue</button>
+                <button class="btn btn-unsafe" id="btnUnsafe" disabled>✕ Unsafe</button>
+            </div>
+            <button class="btn-close" id="btnClose">Close</button>
         </div>
     </div>
 
-    <button onclick="runOptimization()">Optimize Loading</button>
+    <div id="toastContainer"></div>
 
-    <div id="stats">
-        <div class="stat-line"><span>Volume Utilization:</span> <span id="stat-vol">0%</span></div>
-        <div class="stat-line"><span>Total Mass:</span> <span id="stat-mass">0 kg</span></div>
-        <div class="stat-line"><span>LCG (from nose):</span> <span id="stat-cog">0.0m</span></div>
-        <div id="cog-warning" class="warning" style="display:none;">⚠️ COG OUT OF BOUNDS</div>
-    </div>
-    
-    <div style="margin-top: 20px; font-size: 0.8rem; color: #888;">
-        Controls: Left Click (Rotate), Right Click (Pan), Scroll (Zoom)
-    </div>
-</div>
+    <script>
+        // ============ CONFIGURATION ============
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxDK9_pcR0Jnw4So20g53M0ZFaelOh3ioyfXFRfP2KmHk_JjlZPPw1peAcBkCD_SxV8IQ/exec';
+        
+        // ============ STATE ============
+        let cartData = [];
+        let currentTab = 'all';
+        let currentCartId = null;
+        let searchQuery = '';
 
-<div id="viewport"></div>
-
-<script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        // ============ API FUNCTIONS ============
+        async function fetchAssets() {
+            setSyncStatus('syncing', 'Syncing...');
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network error');
+                const data = await response.json();
+                cartData = data;
+                setSyncStatus('ok', 'Live');
+                renderList();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                setSyncStatus('error', 'Offline');
+                const cached = localStorage.getItem('baggageCartData');
+                if (cached) {
+                    cartData = JSON.parse(cached);
+                    renderList();
+                    showToast('⚠️ Using cached data - offline mode');
+                } else {
+                    document.getElementById('cartList').innerHTML = `
+                        <div class="empty-state">
+                            <div class="emoji">🔌</div>
+                            <p>Cannot connect to server</p>
+                            <p style="font-size:13px;margin-top:4px;">Check your internet connection</p>
+                        </div>`;
+                }
+            }
         }
-    }
-</script>
 
-<script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        async function updateAssetOnSheet(cartId, newStatus, issueCount, notes) {
+            setSyncStatus('syncing', 'Saving...');
+            const now = new Date();
+            const formatted = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-    // AIRCRAFT DIMENSIONS (B747-400F Main Deck Approx)
-    const HOLD = {
-        length: 48,  // meters
-        width: 4.8,  // meters
-        height: 3.0, // meters
-        maxPayload: 112000 // kg
-    };
-
-    let scene, camera, renderer, controls, holdWireframe;
-    let cargoMeshes = [];
-
-    function init() {
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x121212);
-
-        camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 350) / window.innerHeight, 0.1, 1000);
-        camera.position.set(40, 30, 60);
-
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth - 350, window.innerHeight);
-        document.getElementById('viewport').appendChild(renderer.domElement);
-
-        controls = new OrbitControls(camera, renderer.domElement);
-        
-        // Lights
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(10, 20, 10);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0x404040));
-
-        // Create Cargo Hold Visual
-        const geometry = new THREE.BoxGeometry(HOLD.width, HOLD.height, HOLD.length);
-        const edges = new THREE.EdgesGeometry(geometry);
-        holdWireframe = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x444444 }));
-        // Center the hold floor at Y=0
-        holdWireframe.position.set(0, HOLD.height / 2, 0);
-        scene.add(holdWireframe);
-
-        // Floor Grid
-        const grid = new THREE.GridHelper(100, 20, 0x333333, 0x222222);
-        scene.add(grid);
-
-        animate();
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
-    }
-
-    // PACKING LOGIC
-    window.runOptimization = function() {
-        // Clear previous
-        cargoMeshes.forEach(m => scene.remove(m));
-        cargoMeshes = [];
-
-        const cargoItems = [
-            { l: parseFloat(l1.value), w: parseFloat(w1.value), h: parseFloat(h1.value), wt: parseFloat(wt1.value), q: parseInt(q1.value), color: 0x007bff },
-            { l: parseFloat(l2.value), w: parseFloat(w2.value), h: parseFloat(h2.value), wt: parseFloat(wt2.value), q: parseInt(q2.value), color: 0xffaa00 }
-        ];
-
-        // Flatten list and sort by volume (descending)
-        let flatItems = [];
-        cargoItems.forEach(group => {
-            for(let i=0; i < group.q; i++) {
-                flatItems.push({...group, vol: group.l * group.w * group.h});
-            }
-        });
-        flatItems.sort((a, b) => b.vol - a.vol);
-
-        let currentX = -HOLD.width/2;
-        let currentZ = -HOLD.length/2;
-        let shelfMaxHeight = 0;
-        let rowMaxDepth = 0;
-        
-        let totalWeight = 0;
-        let weightedZSum = 0;
-        let totalVolUsed = 0;
-
-        flatItems.forEach(item => {
-            // Check if item fits in current row (X)
-            if (currentX + item.w > HOLD.width/2) {
-                currentX = -HOLD.width/2;
-                currentZ += rowMaxDepth;
-                rowMaxDepth = 0;
-            }
-
-            // Check if item fits in length (Z)
-            if (currentZ + item.l <= HOLD.length/2) {
-                // Place Item Mesh
-                const mesh = createBox(item.w, item.h, item.l, item.color);
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: cartId,
+                        status: newStatus,
+                        lastUpdated: formatted,
+                        issueCount: issueCount,
+                        notes: notes
+                    })
+                });
                 
-                // Position (Three.js uses center points)
-                const posX = currentX + item.w/2;
-                const posY = item.h/2;
-                const posZ = currentZ + item.l/2;
+                // Update local data
+                const cart = cartData.find(c => c.id === cartId);
+                if (cart) {
+                    cart.status = newStatus;
+                    cart.lastUpdated = formatted;
+                    cart.issueCount = issueCount;
+                    cart.notes = notes;
+                }
                 
-                mesh.position.set(posX, posY, posZ);
-                scene.add(mesh);
-                cargoMeshes.push(mesh);
-
-                // Stats calc
-                totalWeight += item.wt;
-                weightedZSum += (item.wt * posZ);
-                totalVolUsed += item.vol;
-
-                // Move cursor
-                currentX += item.w;
-                rowMaxDepth = Math.max(rowMaxDepth, item.l);
+                localStorage.setItem('baggageCartData', JSON.stringify(cartData));
+                setSyncStatus('ok', 'Saved ✓');
+                setTimeout(() => setSyncStatus('ok', 'Live'), 2000);
+                renderList();
+                return true;
+            } catch (error) {
+                console.error('Update error:', error);
+                setSyncStatus('error', 'Save failed');
+                showToast('❌ Failed to sync. Try again.');
+                // Still update locally
+                const cart = cartData.find(c => c.id === cartId);
+                if (cart) {
+                    cart.status = newStatus;
+                    cart.lastUpdated = formatted;
+                    cart.issueCount = issueCount;
+                    cart.notes = notes;
+                }
+                localStorage.setItem('baggageCartData', JSON.stringify(cartData));
+                renderList();
+                return false;
             }
-        });
-
-        updateStats(totalWeight, weightedZSum, totalVolUsed);
-    };
-
-    function createBox(w, h, l, color) {
-        const geo = new THREE.BoxGeometry(w, h, l);
-        const mat = new THREE.MeshStandardMaterial({ 
-            color: color, 
-            transparent: true, 
-            opacity: 0.9,
-            roughness: 0.7
-        });
-        return new THREE.Mesh(geo, mat);
-    }
-
-    function updateStats(weight, wZSum, vol) {
-        const volCapacity = HOLD.length * HOLD.width * HOLD.height;
-        const volPct = ((vol / volCapacity) * 100).toFixed(1);
-        const cogZ = weight > 0 ? (wZSum / weight).toFixed(2) : 0;
-        
-        document.getElementById('stat-vol').innerText = `${volPct}%`;
-        document.getElementById('stat-mass').innerText = `${weight.toLocaleString()} kg`;
-        document.getElementById('stat-cog').innerText = `${cogZ}m (offset)`;
-
-        // B747 safe CoG is usually ±5m from the center point of the hold
-        const cogWarning = document.getElementById('cog-warning');
-        if (Math.abs(cogZ) > 5) {
-            cogWarning.style.display = 'block';
-        } else {
-            cogWarning.style.display = 'none';
         }
-    }
 
-    window.addEventListener('resize', () => {
-        camera.aspect = (window.innerWidth - 350) / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth - 350, window.innerHeight);
-    });
+        function setSyncStatus(state, text) {
+            const dot = document.getElementById('syncDot');
+            const textEl = document.getElementById('syncText');
+            dot.className = 'sync-dot';
+            if (state === 'syncing') dot.classList.add('syncing');
+            if (state === 'error') dot.classList.add('error');
+            textEl.textContent = text;
+        }
 
-    init();
-</script>
+        // ============ RENDER ============
+        function getFilteredData() {
+            let filtered = [...cartData];
+            if (currentTab === 'unsafe') filtered = filtered.filter(c => c.status === 'Unsafe');
+            else if (currentTab === 'minor') filtered = filtered.filter(c => c.status === 'Minor');
+            else if (currentTab === 'ok') filtered = filtered.filter(c => c.status === 'OK');
+            
+            if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase().trim();
+                filtered = filtered.filter(c =>
+                    c.id.toLowerCase().includes(q) ||
+                    (c.location && c.location.toLowerCase().includes(q)) ||
+                    (c.notes && c.notes.toLowerCase().includes(q))
+                );
+            }
+            return filtered;
+        }
+
+        function renderList() {
+            const listEl = document.getElementById('cartList');
+            const filtered = getFilteredData();
+
+            if (cartData.length === 0) {
+                listEl.innerHTML = `<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px;">Loading...</p></div>`;
+                return;
+            }
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No assets found</p></div>`;
+            } else {
+                listEl.innerHTML = filtered.map(cart => `
+                    <div class="cart-item" onclick="openDetail('${cart.id}')">
+                        <div class="cart-icon ${(cart.status || 'ok').toLowerCase()}">
+                            ${cart.status === 'OK' ? '✓' : cart.status === 'Minor' ? '!' : '✕'}
+                        </div>
+                        <div class="cart-info">
+                            <div class="cart-id">${cart.id}</div>
+                            <div class="cart-type">${cart.type || 'Baggage Cart'}</div>
+                        </div>
+                        <div class="cart-meta">
+                            <div>
+                                <span class="status-dot ${(cart.status || 'ok').toLowerCase()}"></span>
+                                <span class="status-label ${(cart.status || 'ok').toLowerCase()}">${cart.status || 'OK'}</span>
+                            </div>
+                            <div class="cart-location">📍 ${cart.location || 'Unknown'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            updateCounts();
+        }
+
+        function updateCounts() {
+            const all = cartData.length;
+            const unsafe = cartData.filter(c => c.status === 'Unsafe').length;
+            const minor = cartData.filter(c => c.status === 'Minor').length;
+            const ok = cartData.filter(c => c.status === 'OK').length;
+            document.getElementById('count-all').textContent = all;
+            document.getElementById('count-unsafe').textContent = unsafe;
+            document.getElementById('count-minor').textContent = minor;
+            document.getElementById('count-ok').textContent = ok;
+        }
+
+        // ============ MODAL ============
+        function openDetail(cartId) {
+            const cart = cartData.find(c => c.id === cartId);
+            if (!cart) return;
+            currentCartId = cartId;
+            
+            document.getElementById('modalTitle').textContent = cart.id;
+            document.getElementById('modalStatus').textContent = cart.status || 'OK';
+            document.getElementById('modalUpdated').textContent = cart.lastUpdated || '-';
+            document.getElementById('modalIssues').textContent = cart.issueCount || 0;
+            document.getElementById('modalLocation').textContent = cart.location || '-';
+
+            const notesRow = document.getElementById('modalNotesRow');
+            if (cart.notes) {
+                notesRow.style.display = 'flex';
+                document.getElementById('modalNotes').textContent = cart.notes;
+            } else {
+                notesRow.style.display = 'none';
+            }
+
+            document.querySelectorAll('.modal-actions .btn').forEach(b => {
+                b.disabled = false;
+                b.classList.remove('active-btn');
+            });
+            const status = (cart.status || 'OK').toLowerCase();
+            if (status === 'ok') document.getElementById('btnOk').classList.add('active-btn');
+            if (status === 'minor') document.getElementById('btnMinor').classList.add('active-btn');
+            if (status === 'unsafe') document.getElementById('btnUnsafe').classList.add('active-btn');
+
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+            currentCartId = null;
+        }
+
+        async function updateStatus(newStatus) {
+            if (!currentCartId) return;
+            const cart = cartData.find(c => c.id === currentCartId);
+            if (!cart) return;
+
+            document.querySelectorAll('.modal-actions .btn').forEach(b => b.disabled = true);
+            
+            const newIssueCount = newStatus === 'Unsafe' ? (cart.issueCount || 0) + 1 :
+                                  newStatus === 'Minor' ? Math.max(1, (cart.issueCount || 0)) : (cart.issueCount || 0);
+            
+            const success = await updateAssetOnSheet(currentCartId, newStatus, newIssueCount, cart.notes || '');
+            
+            showToast(`✅ ${currentCartId} → ${newStatus}`);
+            openDetail(currentCartId);
+        }
+
+        // ============ TOAST ============
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ============ QR SCAN ============
+        function simulateQRScan() {
+            const cartId = prompt('📷 Scan QR Code\n\nEnter Cart ID (e.g., CART-001):');
+            if (cartId) {
+                const normalized = cartId.toUpperCase().trim();
+                const cart = cartData.find(c => c.id === normalized);
+                if (cart) {
+                    openDetail(normalized);
+                } else {
+                    showToast('❌ Asset not found: ' + normalized);
+                }
+            }
+        }
+
+        // ============ EVENT LISTENERS ============
+        document.getElementById('tabs').addEventListener('click', (e) => {
+            const tab = e.target.closest('.tab');
+            if (!tab) return;
+            currentTab = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
+            const navMatch = document.querySelector(`.bottom-nav .nav-item[data-nav="${currentTab}"]`);
+            if (navMatch) navMatch.classList.add('active');
+            renderList();
+        });
+
+        document.querySelector('.bottom-nav').addEventListener('click', (e) => {
+            const nav = e.target.closest('.nav-item');
+            if (!nav) return;
+            currentTab = nav.dataset.nav;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const tabMatch = document.querySelector(`.tab[data-tab="${currentTab}"]`);
+            if (tabMatch) tabMatch.classList.add('active');
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
+            nav.classList.add('active');
+            renderList();
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderList();
+        });
+
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modalOverlay')) closeModal();
+        });
+        document.getElementById('btnClose').addEventListener('click', closeModal);
+        document.getElementById('btnOk').addEventListener('click', () => updateStatus('OK'));
+        document.getElementById('btnMinor').addEventListener('click', () => updateStatus('Minor'));
+        document.getElementById('btnUnsafe').addEventListener('click', () => updateStatus('Unsafe'));
+        document.getElementById('qrFab').addEventListener('click', simulateQRScan);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'q' && e.ctrlKey) { e.preventDefault(); simulateQRScan(); }
+        });
+
+        // ============ INIT ============
+        fetchAssets();
+        setInterval(fetchAssets, 30000);
+
+        console.log('🚛 Baggage Cart Health System Ready');
+        console.log('🔗 Connected to Google Sheets');
+        console.log('📱 Tap QR button or Ctrl+Q to simulate scan');
+    </script>
 </body>
 </html>
