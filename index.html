@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Baggage Cart Health</title>
+    
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
     <style>
         :root {
             --bg: #f5f5f5;
@@ -169,6 +173,7 @@
         .empty-state { text-align: center; padding: 40px 20px; color: #999; }
         .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
 
+        /* Detail Modal */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -251,6 +256,96 @@
             color: #666;
         }
 
+        /* QR Scanner Modal */
+        .scanner-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+        }
+        .scanner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #000;
+            color: #fff;
+            z-index: 501;
+        }
+        .scanner-header h3 { font-size: 18px; font-weight: 600; }
+        .scanner-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scanner-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        #qr-reader {
+            width: 100%;
+            height: 100%;
+        }
+        /* Hide the redundant camera selection UI */
+        #qr-reader__dashboard_section_csr { display: none !important; }
+        #qr-reader__dashboard_section_swaplink { display: none !important; }
+        
+        .scanner-footer {
+            padding: 20px 16px;
+            background: #000;
+            color: #fff;
+            text-align: center;
+            z-index: 501;
+        }
+        .scanner-footer p { font-size: 14px; opacity: 0.8; margin-bottom: 12px; }
+        .scanner-manual-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .scanner-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            border: 3px solid var(--accent-blue);
+            border-radius: 16px;
+            box-shadow: 0 0 0 2000px rgba(0,0,0,0.4);
+            pointer-events: none;
+            z-index: 502;
+        }
+        .scanner-frame::before {
+            content: 'Point camera at QR code';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 13px;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        /* Bottom nav */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -278,26 +373,34 @@
         .nav-item .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
         .nav-item.active { color: var(--accent-blue); }
 
+        /* QR FAB - pulsing to attract attention */
         .qr-fab {
             position: fixed;
             bottom: 80px;
             right: calc(50% - 210px);
-            width: 48px;
-            height: 48px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             background: var(--accent-blue);
             color: #fff;
             border: none;
-            font-size: 22px;
+            font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(33,150,243,0.4);
+            box-shadow: 0 4px 16px rgba(33,150,243,0.5);
             z-index: 160;
             display: flex;
             align-items: center;
             justify-content: center;
+            animation: fabPulse 2s infinite;
+        }
+        @keyframes fabPulse {
+            0% { box-shadow: 0 4px 16px rgba(33,150,243,0.5); }
+            50% { box-shadow: 0 4px 28px rgba(33,150,243,0.8); }
+            100% { box-shadow: 0 4px 16px rgba(33,150,243,0.5); }
         }
         @media (max-width: 480px) { .qr-fab { right: 16px; } }
 
+        /* Toast */
         .toast {
             position: fixed;
             top: 20px;
@@ -309,9 +412,10 @@
             border-radius: 20px;
             font-size: 13px;
             font-weight: 500;
-            z-index: 300;
+            z-index: 600;
             animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
             pointer-events: none;
+            white-space: nowrap;
         }
         @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
         @keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
@@ -330,6 +434,7 @@
 </head>
 <body>
 
+    <!-- Main App -->
     <div class="header">
         <h1>🚛 Baggage Cart Assets</h1>
         <div class="sync-indicator" id="syncIndicator">
@@ -356,8 +461,10 @@
         </div>
     </div>
 
+    <!-- QR Scanner FAB -->
     <button class="qr-fab" id="qrFab" title="Scan QR Code">📷</button>
 
+    <!-- Bottom Nav -->
     <div class="bottom-nav">
         <button class="nav-item active" data-nav="all"><span class="nav-icon">📋</span>All Assets</button>
         <button class="nav-item" data-nav="unsafe"><span class="nav-icon">🔴</span>Unsafe</button>
@@ -365,6 +472,7 @@
         <button class="nav-item" data-nav="ok"><span class="nav-icon">🟢</span>OK Assets</button>
     </div>
 
+    <!-- Cart Detail Modal -->
     <div class="modal-overlay" id="modalOverlay" style="display:none;">
         <div class="modal" id="modal">
             <div class="modal-handle"></div>
@@ -388,6 +496,23 @@
         </div>
     </div>
 
+    <!-- QR Scanner Full Screen -->
+    <div class="scanner-overlay" id="scannerOverlay" style="display:none;">
+        <div class="scanner-header">
+            <h3>📷 Scan QR Code</h3>
+            <button class="scanner-close" id="scannerClose">✕</button>
+        </div>
+        <div class="scanner-container">
+            <div id="qr-reader"></div>
+            <div class="scanner-frame"></div>
+        </div>
+        <div class="scanner-footer">
+            <p>Point camera at the cart's QR code</p>
+            <button class="scanner-manual-btn" id="scannerManual">⌨️ Enter Cart ID Manually</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
     <div id="toastContainer"></div>
 
     <script>
@@ -399,6 +524,8 @@
         let currentTab = 'all';
         let currentCartId = null;
         let searchQuery = '';
+        let html5QrCode = null;
+        let scannerActive = false;
 
         // ============ API FUNCTIONS ============
         async function fetchAssets() {
@@ -417,13 +544,12 @@
                 if (cached) {
                     cartData = JSON.parse(cached);
                     renderList();
-                    showToast('⚠️ Using cached data - offline mode');
+                    showToast('⚠️ Using cached data');
                 } else {
                     document.getElementById('cartList').innerHTML = `
                         <div class="empty-state">
                             <div class="emoji">🔌</div>
                             <p>Cannot connect to server</p>
-                            <p style="font-size:13px;margin-top:4px;">Check your internet connection</p>
                         </div>`;
                 }
             }
@@ -435,7 +561,7 @@
             const formatted = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
             try {
-                const response = await fetch(API_URL, {
+                await fetch(API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
@@ -448,7 +574,6 @@
                     })
                 });
                 
-                // Update local data
                 const cart = cartData.find(c => c.id === cartId);
                 if (cart) {
                     cart.status = newStatus;
@@ -465,8 +590,7 @@
             } catch (error) {
                 console.error('Update error:', error);
                 setSyncStatus('error', 'Save failed');
-                showToast('❌ Failed to sync. Try again.');
-                // Still update locally
+                showToast('❌ Failed to sync');
                 const cart = cartData.find(c => c.id === cartId);
                 if (cart) {
                     cart.status = newStatus;
@@ -487,6 +611,129 @@
             if (state === 'syncing') dot.classList.add('syncing');
             if (state === 'error') dot.classList.add('error');
             textEl.textContent = text;
+        }
+
+        // ============ QR SCANNER ============
+        function openScanner() {
+            document.getElementById('scannerOverlay').style.display = 'flex';
+            
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+            
+            const config = { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, // Back camera
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).then(() => {
+                scannerActive = true;
+                console.log('📷 Scanner started');
+            }).catch(err => {
+                console.error('Scanner error:', err);
+                showToast('❌ Camera access denied. Check permissions.');
+                closeScanner();
+            });
+        }
+
+        function closeScanner() {
+            if (html5QrCode && scannerActive) {
+                html5QrCode.stop().then(() => {
+                    scannerActive = false;
+                    console.log('📷 Scanner stopped');
+                }).catch(err => {
+                    console.error('Stop error:', err);
+                    scannerActive = false;
+                });
+            }
+            document.getElementById('scannerOverlay').style.display = 'none';
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log('✅ QR Scanned:', decodedText);
+            
+            // Stop scanner immediately
+            if (html5QrCode && scannerActive) {
+                html5QrCode.stop().then(() => {
+                    scannerActive = false;
+                }).catch(() => {
+                    scannerActive = false;
+                });
+            }
+            
+            document.getElementById('scannerOverlay').style.display = 'none';
+            
+            // Process the scanned ID
+            handleScannedCart(decodedText.trim());
+        }
+
+        function onScanFailure(error) {
+            // This fires constantly while scanning. Don't show toasts here.
+            // Only log severe errors
+            if (error && error.includes('NotFound')) {
+                // Normal - just means no QR in frame yet
+                return;
+            }
+            console.debug('Scan attempt:', error);
+        }
+
+        function handleScannedCart(scannedText) {
+            // The QR code should contain the Cart ID (e.g., "CART-001")
+            // But we'll handle various formats:
+            let cartId = scannedText.toUpperCase().trim();
+            
+            // If the QR contains a URL with the ID at the end, extract it
+            if (cartId.includes('/')) {
+                const parts = cartId.split('/');
+                cartId = parts[parts.length - 1];
+            }
+            
+            // Remove any query parameters
+            if (cartId.includes('?')) {
+                cartId = cartId.split('?')[0];
+            }
+            
+            // Remove any non-alphanumeric/hyphen characters
+            cartId = cartId.replace(/[^A-Z0-9\-]/g, '');
+            
+            console.log('🔍 Looking for cart:', cartId);
+            
+            const cart = cartData.find(c => c.id.toUpperCase() === cartId);
+            if (cart) {
+                showToast(`✅ Found: ${cart.id}`);
+                openDetail(cart.id);
+            } else {
+                showToast(`❌ Not found: ${cartId}`);
+                // Ask if they want to search manually
+                setTimeout(() => {
+                    const manualSearch = confirm(`Cart "${cartId}" not found in the system.\n\nWould you like to search manually?`);
+                    if (manualSearch) {
+                        document.getElementById('searchInput').value = cartId;
+                        document.getElementById('searchInput').focus();
+                        // Switch to "All" tab
+                        currentTab = 'all';
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelector('.tab[data-tab="all"]').classList.add('active');
+                        renderList();
+                        searchQuery = cartId;
+                        renderList();
+                    }
+                }, 500);
+            }
+        }
+
+        function manualEntry() {
+            closeScanner();
+            const cartId = prompt('Enter Cart ID:', 'CART-');
+            if (cartId) {
+                handleScannedCart(cartId);
+            }
         }
 
         // ============ RENDER ============
@@ -599,7 +846,7 @@
             const newIssueCount = newStatus === 'Unsafe' ? (cart.issueCount || 0) + 1 :
                                   newStatus === 'Minor' ? Math.max(1, (cart.issueCount || 0)) : (cart.issueCount || 0);
             
-            const success = await updateAssetOnSheet(currentCartId, newStatus, newIssueCount, cart.notes || '');
+            await updateAssetOnSheet(currentCartId, newStatus, newIssueCount, cart.notes || '');
             
             showToast(`✅ ${currentCartId} → ${newStatus}`);
             openDetail(currentCartId);
@@ -613,20 +860,6 @@
             toast.textContent = message;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
-        }
-
-        // ============ QR SCAN ============
-        function simulateQRScan() {
-            const cartId = prompt('📷 Scan QR Code\n\nEnter Cart ID (e.g., CART-001):');
-            if (cartId) {
-                const normalized = cartId.toUpperCase().trim();
-                const cart = cartData.find(c => c.id === normalized);
-                if (cart) {
-                    openDetail(normalized);
-                } else {
-                    showToast('❌ Asset not found: ' + normalized);
-                }
-            }
         }
 
         // ============ EVENT LISTENERS ============
@@ -646,39 +879,3 @@
             const nav = e.target.closest('.nav-item');
             if (!nav) return;
             currentTab = nav.dataset.nav;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            const tabMatch = document.querySelector(`.tab[data-tab="${currentTab}"]`);
-            if (tabMatch) tabMatch.classList.add('active');
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-            nav.classList.add('active');
-            renderList();
-        });
-
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            searchQuery = e.target.value;
-            renderList();
-        });
-
-        document.getElementById('modalOverlay').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('modalOverlay')) closeModal();
-        });
-        document.getElementById('btnClose').addEventListener('click', closeModal);
-        document.getElementById('btnOk').addEventListener('click', () => updateStatus('OK'));
-        document.getElementById('btnMinor').addEventListener('click', () => updateStatus('Minor'));
-        document.getElementById('btnUnsafe').addEventListener('click', () => updateStatus('Unsafe'));
-        document.getElementById('qrFab').addEventListener('click', simulateQRScan);
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'q' && e.ctrlKey) { e.preventDefault(); simulateQRScan(); }
-        });
-
-        // ============ INIT ============
-        fetchAssets();
-        setInterval(fetchAssets, 30000);
-
-        console.log('🚛 Baggage Cart Health System Ready');
-        console.log('🔗 Connected to Google Sheets');
-        console.log('📱 Tap QR button or Ctrl+Q to simulate scan');
-    </script>
-</body>
-</html>
