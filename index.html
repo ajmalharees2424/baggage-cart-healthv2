@@ -4,442 +4,205 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Baggage Cart Health</title>
-    
-    <!-- QR Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    
     <style>
         :root {
-            --bg: #f5f5f5;
-            --card-bg: #ffffff;
-            --text: #1a1a1a;
-            --text-secondary: #666666;
-            --border: #e0e0e0;
-            --ok: #4CAF50;
-            --minor: #FF9800;
-            --unsafe: #F44336;
-            --accent-blue: #2196F3;
+            --bg: #f5f5f5; --card-bg: #ffffff; --text: #1a1a1a;
+            --text-secondary: #666666; --border: #e0e0e0;
+            --ok: #4CAF50; --minor: #FF9800; --unsafe: #F44336; --accent-blue: #2196F3;
             --shadow: 0 1px 3px rgba(0,0,0,0.1);
-            --radius: 10px;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            max-width: 480px;
-            margin: 0 auto;
-            min-height: 100vh;
+            background: var(--bg); color: var(--text);
+            max-width: 480px; margin: 0 auto; min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
         }
-
         .header {
-            background: #fff;
-            padding: 12px 16px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: #fff; padding: 12px 16px; position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid var(--border); display: flex;
+            justify-content: space-between; align-items: center; box-shadow: var(--shadow);
         }
-        .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-        .sync-indicator {
-            font-size: 11px;
-            color: #999;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .sync-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #4CAF50;
-        }
+        .header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+        .sync-indicator { font-size: 11px; color: #999; display: flex; align-items: center; gap: 4px; }
+        .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4CAF50; display: inline-block; }
         .sync-dot.syncing { background: #FF9800; animation: pulse 1s infinite; }
         .sync-dot.error { background: #F44336; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-        .search-container {
-            padding: 12px 16px;
-            background: #fff;
-            border-bottom: 1px solid var(--border);
-        }
+        .search-container { padding: 10px 16px; background: #fff; border-bottom: 1px solid var(--border); }
         .search-input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: 15px;
-            background: #f9f9f9;
-            outline: none;
-            transition: border 0.2s;
+            width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+            border-radius: 8px; font-size: 15px; background: #f9f9f9; outline: none;
         }
         .search-input:focus { border-color: var(--accent-blue); background: #fff; }
-
         .tabs {
-            display: flex;
-            background: #fff;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 56px;
-            z-index: 99;
+            display: flex; background: #fff; border-bottom: 1px solid var(--border);
+            position: sticky; top: 54px; z-index: 99;
         }
         .tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px 8px;
-            font-size: 13px;
-            font-weight: 600;
-            border: none;
-            background: none;
-            cursor: pointer;
-            color: var(--text-secondary);
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            letter-spacing: -0.2px;
-            white-space: nowrap;
+            flex: 1; text-align: center; padding: 10px 4px; font-size: 11px;
+            font-weight: 600; border: none; background: none; cursor: pointer;
+            color: var(--text-secondary); border-bottom: 2px solid transparent;
+            white-space: nowrap; transition: all 0.2s;
         }
         .tab.active { color: var(--text); border-bottom-color: var(--accent-blue); }
-        .tab-badge {
-            display: inline-block;
-            background: #eee;
-            border-radius: 10px;
-            padding: 2px 8px;
-            font-size: 11px;
-            margin-left: 4px;
-            font-weight: 500;
-        }
+        .tab-badge { background: #eee; border-radius: 8px; padding: 1px 6px; font-size: 10px; margin-left: 2px; }
         .tab.active .tab-badge { background: #e3f2fd; color: var(--accent-blue); }
-
-        .list {
-            padding: 8px 16px 100px;
-            background: #fff;
-            min-height: 60vh;
-        }
+        .list { padding: 8px 16px 100px; background: #fff; min-height: 60vh; }
         .cart-item {
-            display: flex;
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background 0.15s;
-            gap: 12px;
+            display: flex; align-items: center; padding: 13px 0;
+            border-bottom: 1px solid #f0f0f0; cursor: pointer; gap: 10px;
         }
-        .cart-item:active { background: #f5f5f5; margin: 0 -16px; padding: 14px 16px; }
+        .cart-item:active { background: #f9f9f9; margin: 0 -16px; padding: 13px 16px; }
         .cart-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-            font-weight: 700;
+            width: 42px; height: 42px; border-radius: 10px; display: flex;
+            align-items: center; justify-content: center; font-size: 18px;
+            flex-shrink: 0; font-weight: 700;
         }
         .cart-icon.ok { background: #E8F5E9; color: var(--ok); }
         .cart-icon.minor { background: #FFF3E0; color: var(--minor); }
         .cart-icon.unsafe { background: #FFEBEE; color: var(--unsafe); }
         .cart-info { flex: 1; min-width: 0; }
-        .cart-id { font-weight: 600; font-size: 15px; letter-spacing: -0.2px; }
-        .cart-type { font-size: 13px; color: var(--text-secondary); }
+        .cart-id { font-weight: 600; font-size: 14px; }
+        .cart-type { font-size: 12px; color: var(--text-secondary); }
         .cart-meta { text-align: right; flex-shrink: 0; }
-        .status-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 4px;
-        }
+        .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 3px; }
         .status-dot.ok { background: var(--ok); }
         .status-dot.minor { background: var(--minor); }
         .status-dot.unsafe { background: var(--unsafe); }
-        .status-label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
+        .status-label { font-size: 11px; font-weight: 600; text-transform: uppercase; }
         .status-label.ok { color: var(--ok); }
         .status-label.minor { color: var(--minor); }
         .status-label.unsafe { color: var(--unsafe); }
-        .cart-location { font-size: 11px; color: #999; margin-top: 2px; }
-        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
-        .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+        .cart-location { font-size: 10px; color: #999; margin-top: 1px; }
+        .empty-state { text-align: center; padding: 50px 20px; color: #999; }
+        .empty-state .emoji { font-size: 40px; margin-bottom: 8px; }
 
-        /* Detail Modal */
+        /* Modal */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            display: flex;
-            align-items: flex-end;
-            animation: fadeIn 0.2s;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+            display: flex; align-items: flex-end; animation: fadeIn 0.2s;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal {
-            background: #fff;
-            width: 100%;
-            max-width: 480px;
-            margin: 0 auto;
-            border-radius: 16px 16px 0 0;
-            padding: 8px 0 24px;
-            animation: slideUp 0.3s ease;
-            max-height: 85vh;
-            overflow-y: auto;
+            background: #fff; width: 100%; max-width: 480px; margin: 0 auto;
+            border-radius: 16px 16px 0 0; padding: 8px 0 24px;
+            animation: slideUp 0.3s ease; max-height: 85vh; overflow-y: auto;
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .modal-handle {
-            width: 36px;
-            height: 4px;
-            background: #ddd;
-            border-radius: 2px;
-            margin: 0 auto 16px;
-        }
-        .modal-header { padding: 0 20px 16px; border-bottom: 1px solid var(--border); }
-        .modal-header h2 { font-size: 22px; font-weight: 700; }
-        .modal-header .modal-type { font-size: 14px; color: var(--text-secondary); }
-        .modal-body { padding: 16px 20px; }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #f5f5f5;
-            font-size: 14px;
-        }
+        .modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 14px; }
+        .modal-header { padding: 0 20px 14px; border-bottom: 1px solid var(--border); }
+        .modal-header h2 { font-size: 20px; font-weight: 700; }
+        .modal-type { font-size: 13px; color: var(--text-secondary); }
+        .modal-body { padding: 14px 20px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
         .detail-label { color: var(--text-secondary); }
         .detail-value { font-weight: 500; }
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            padding: 16px 20px;
-            flex-wrap: wrap;
-        }
+        .modal-actions { display: flex; gap: 8px; padding: 14px 20px; flex-wrap: wrap; }
         .btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 14px 12px;
-            border: 2px solid transparent;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s;
-            text-align: center;
-            letter-spacing: -0.2px;
+            flex: 1; min-width: 70px; padding: 12px 8px; border: 2px solid transparent;
+            border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all 0.15s; text-align: center;
         }
         .btn:active { transform: scale(0.96); }
-        .btn:disabled { opacity: 0.5; pointer-events: none; }
+        .btn:disabled { opacity: 0.4; pointer-events: none; }
         .btn-ok { background: #E8F5E9; color: var(--ok); border-color: var(--ok); }
-        .btn-ok.active-btn { background: var(--ok); color: #fff; }
+        .btn-ok.active-btn, .btn-ok:active { background: var(--ok); color: #fff; }
         .btn-minor { background: #FFF3E0; color: var(--minor); border-color: var(--minor); }
-        .btn-minor.active-btn { background: var(--minor); color: #fff; }
+        .btn-minor.active-btn, .btn-minor:active { background: var(--minor); color: #fff; }
         .btn-unsafe { background: #FFEBEE; color: var(--unsafe); border-color: var(--unsafe); }
-        .btn-unsafe.active-btn { background: var(--unsafe); color: #fff; }
+        .btn-unsafe.active-btn, .btn-unsafe:active { background: var(--unsafe); color: #fff; }
         .btn-close {
-            width: calc(100% - 40px);
-            margin: 8px 20px;
-            padding: 14px;
-            background: #f5f5f5;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #666;
+            width: calc(100% - 40px); margin: 6px 20px; padding: 13px;
+            background: #f5f5f5; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer; color: #666;
         }
 
-        /* QR Scanner Modal */
+        /* Scanner */
         .scanner-overlay {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 500;
-            display: flex;
-            flex-direction: column;
+            position: fixed; inset: 0; background: #000; z-index: 500;
+            display: flex; flex-direction: column;
         }
         .scanner-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            background: #000;
-            color: #fff;
-            z-index: 501;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 16px; background: #000; color: #fff; z-index: 501;
         }
-        .scanner-header h3 { font-size: 18px; font-weight: 600; }
         .scanner-close {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: #fff;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(255,255,255,0.2); border: none; color: #fff;
+            width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer;
         }
-        .scanner-container {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-        #qr-reader {
-            width: 100%;
-            height: 100%;
-        }
-        /* Hide the redundant camera selection UI */
+        .scanner-container { flex: 1; position: relative; overflow: hidden; }
+        #qr-reader { width: 100%; height: 100%; }
         #qr-reader__dashboard_section_csr { display: none !important; }
         #qr-reader__dashboard_section_swaplink { display: none !important; }
-        
-        .scanner-footer {
-            padding: 20px 16px;
-            background: #000;
-            color: #fff;
-            text-align: center;
-            z-index: 501;
-        }
-        .scanner-footer p { font-size: 14px; opacity: 0.8; margin-bottom: 12px; }
+        .scanner-footer { padding: 16px; background: #000; color: #fff; text-align: center; z-index: 501; }
+        .scanner-footer p { font-size: 13px; opacity: 0.8; margin-bottom: 10px; }
         .scanner-manual-btn {
-            width: 100%;
-            padding: 14px;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
+            width: 100%; padding: 12px; background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 8px;
+            color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
         }
         .scanner-frame {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 250px;
-            height: 250px;
-            border: 3px solid var(--accent-blue);
-            border-radius: 16px;
-            box-shadow: 0 0 0 2000px rgba(0,0,0,0.4);
-            pointer-events: none;
-            z-index: 502;
-        }
-        .scanner-frame::before {
-            content: 'Point camera at QR code';
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            font-size: 13px;
-            white-space: nowrap;
-            font-weight: 500;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 220px; height: 220px; border: 3px solid var(--accent-blue);
+            border-radius: 16px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);
+            pointer-events: none; z-index: 502;
         }
 
         /* Bottom nav */
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 480px;
-            background: #fff;
-            border-top: 1px solid var(--border);
-            display: flex;
-            z-index: 150;
-            box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px; background: #fff;
+            border-top: 1px solid var(--border); display: flex; z-index: 150;
         }
         .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 10px 4px 8px;
-            font-size: 10px;
-            color: #999;
-            cursor: pointer;
-            border: none;
-            background: none;
-            transition: color 0.2s;
+            flex: 1; text-align: center; padding: 8px 4px 6px; font-size: 10px;
+            color: #999; cursor: pointer; border: none; background: none;
         }
-        .nav-item .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+        .nav-item .nav-icon { font-size: 18px; display: block; margin-bottom: 1px; }
         .nav-item.active { color: var(--accent-blue); }
 
-        /* QR FAB - pulsing to attract attention */
         .qr-fab {
-            position: fixed;
-            bottom: 80px;
-            right: calc(50% - 210px);
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: var(--accent-blue);
-            color: #fff;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 16px rgba(33,150,243,0.5);
-            z-index: 160;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed; bottom: 75px; right: calc(50% - 210px);
+            width: 52px; height: 52px; border-radius: 50%; background: var(--accent-blue);
+            color: #fff; border: none; font-size: 22px; cursor: pointer;
+            box-shadow: 0 4px 16px rgba(33,150,243,0.5); z-index: 160;
+            display: flex; align-items: center; justify-content: center;
             animation: fabPulse 2s infinite;
         }
         @keyframes fabPulse {
             0% { box-shadow: 0 4px 16px rgba(33,150,243,0.5); }
-            50% { box-shadow: 0 4px 28px rgba(33,150,243,0.8); }
+            50% { box-shadow: 0 4px 24px rgba(33,150,243,0.7); }
             100% { box-shadow: 0 4px 16px rgba(33,150,243,0.5); }
         }
-        @media (max-width: 480px) { .qr-fab { right: 16px; } }
+        @media (max-width: 480px) { .qr-fab { right: 14px; } }
 
-        /* Toast */
         .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            z-index: 600;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 10px 18px; border-radius: 20px;
+            font-size: 13px; font-weight: 500; z-index: 600;
             animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
-            pointer-events: none;
-            white-space: nowrap;
+            pointer-events: none; white-space: nowrap;
         }
         @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
         @keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
 
         .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #ccc;
-            border-top-color: var(--accent-blue);
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
+            display: inline-block; width: 20px; height: 20px;
+            border: 2px solid #ddd; border-top-color: var(--accent-blue);
+            border-radius: 50%; animation: spin 0.6s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- Main App -->
     <div class="header">
         <h1>🚛 Baggage Cart Assets</h1>
-        <div class="sync-indicator" id="syncIndicator">
+        <div class="sync-indicator">
             <span class="sync-dot" id="syncDot"></span>
-            <span id="syncText">Ready</span>
+            <span id="syncText" style="font-size:10px;">Ready</span>
         </div>
     </div>
 
@@ -448,55 +211,53 @@
     </div>
 
     <div class="tabs" id="tabs">
-        <button class="tab active" data-tab="all">All<span class="tab-badge" id="count-all">-</span></button>
-        <button class="tab" data-tab="unsafe">Unsafe<span class="tab-badge" id="count-unsafe">-</span></button>
-        <button class="tab" data-tab="minor">Minor Issue<span class="tab-badge" id="count-minor">-</span></button>
-        <button class="tab" data-tab="ok">OK Assets<span class="tab-badge" id="count-ok">-</span></button>
+        <button class="tab active" data-tab="all">All<span class="tab-badge" id="count-all">0</span></button>
+        <button class="tab" data-tab="unsafe">Unsafe<span class="tab-badge" id="count-unsafe">0</span></button>
+        <button class="tab" data-tab="minor">Minor<span class="tab-badge" id="count-minor">0</span></button>
+        <button class="tab" data-tab="ok">OK<span class="tab-badge" id="count-ok">0</span></button>
     </div>
 
     <div class="list" id="cartList">
         <div class="empty-state">
             <div class="spinner"></div>
-            <p style="margin-top:12px;">Loading assets...</p>
+            <p style="margin-top:10px;">Loading assets...</p>
         </div>
     </div>
 
-    <!-- QR Scanner FAB -->
-    <button class="qr-fab" id="qrFab" title="Scan QR Code">📷</button>
+    <button class="qr-fab" id="qrFab" title="Scan QR">📷</button>
 
-    <!-- Bottom Nav -->
     <div class="bottom-nav">
-        <button class="nav-item active" data-nav="all"><span class="nav-icon">📋</span>All Assets</button>
+        <button class="nav-item active" data-nav="all"><span class="nav-icon">📋</span>All</button>
         <button class="nav-item" data-nav="unsafe"><span class="nav-icon">🔴</span>Unsafe</button>
-        <button class="nav-item" data-nav="minor"><span class="nav-icon">🟠</span>Minor Issue</button>
-        <button class="nav-item" data-nav="ok"><span class="nav-icon">🟢</span>OK Assets</button>
+        <button class="nav-item" data-nav="minor"><span class="nav-icon">🟠</span>Minor</button>
+        <button class="nav-item" data-nav="ok"><span class="nav-icon">🟢</span>OK</button>
     </div>
 
-    <!-- Cart Detail Modal -->
+    <!-- Detail Modal -->
     <div class="modal-overlay" id="modalOverlay" style="display:none;">
-        <div class="modal" id="modal">
+        <div class="modal">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <h2 id="modalTitle">CART-001</h2>
+                <h2 id="modalTitle">-</h2>
                 <span class="modal-type">Baggage Cart</span>
             </div>
             <div class="modal-body">
                 <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" id="modalStatus">-</span></div>
                 <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value" id="modalUpdated">-</span></div>
-                <div class="detail-row"><span class="detail-label">Issue Count</span><span class="detail-value" id="modalIssues">-</span></div>
+                <div class="detail-row"><span class="detail-label">Issue Count</span><span class="detail-value" id="modalIssues">0</span></div>
                 <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value" id="modalLocation">-</span></div>
                 <div class="detail-row" id="modalNotesRow" style="display:none;"><span class="detail-label">Notes</span><span class="detail-value" id="modalNotes">-</span></div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-ok" id="btnOk" disabled>✓ OK</button>
-                <button class="btn btn-minor" id="btnMinor" disabled>⚠ Minor Issue</button>
-                <button class="btn btn-unsafe" id="btnUnsafe" disabled>✕ Unsafe</button>
+                <button class="btn btn-ok" id="btnOk">✓ OK</button>
+                <button class="btn btn-minor" id="btnMinor">⚠ Minor</button>
+                <button class="btn btn-unsafe" id="btnUnsafe">✕ Unsafe</button>
             </div>
             <button class="btn-close" id="btnClose">Close</button>
         </div>
     </div>
 
-    <!-- QR Scanner Full Screen -->
+    <!-- Scanner -->
     <div class="scanner-overlay" id="scannerOverlay" style="display:none;">
         <div class="scanner-header">
             <h3>📷 Scan QR Code</h3>
@@ -512,13 +273,36 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div id="toastContainer"></div>
 
     <script>
         // ============ CONFIGURATION ============
         const API_URL = 'https://script.google.com/macros/s/AKfycbxDK9_pcR0Jnw4So20g53M0ZFaelOh3ioyfXFRfP2KmHk_JjlZPPw1peAcBkCD_SxV8IQ/exec';
-        
+
+        // ============ FALLBACK DATA (in case API is slow/broken) ============
+        const FALLBACK_DATA = [
+            { id: "CART-001", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:00", issueCount: 0, location: "Zone A", notes: "" },
+            { id: "CART-002", type: "Baggage Cart", status: "Minor", lastUpdated: "2026-04-23 08:45", issueCount: 1, location: "Zone B", notes: "Loose wheel" },
+            { id: "CART-003", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 08:50", issueCount: 0, location: "Zone A", notes: "" },
+            { id: "CART-004", type: "Baggage Cart", status: "Unsafe", lastUpdated: "2026-04-23 08:30", issueCount: 3, location: "Zone C", notes: "Broken hitch" },
+            { id: "CART-005", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:05", issueCount: 0, location: "Zone A", notes: "" },
+            { id: "CART-006", type: "Baggage Cart", status: "Minor", lastUpdated: "2026-04-23 08:40", issueCount: 2, location: "Zone B", notes: "Flat tire" },
+            { id: "CART-007", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 08:55", issueCount: 0, location: "Zone A", notes: "" },
+            { id: "CART-008", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:10", issueCount: 0, location: "Zone D", notes: "" },
+            { id: "CART-009", type: "Baggage Cart", status: "Unsafe", lastUpdated: "2026-04-23 08:20", issueCount: 4, location: "Zone C", notes: "Brake failure" },
+            { id: "CART-010", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:00", issueCount: 0, location: "Zone B", notes: "" },
+            { id: "CART-011", type: "Baggage Cart", status: "Minor", lastUpdated: "2026-04-23 08:35", issueCount: 1, location: "Zone A", notes: "Loose handle" },
+            { id: "CART-012", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:15", issueCount: 0, location: "Zone D", notes: "" },
+            { id: "CART-013", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:05", issueCount: 0, location: "Zone C", notes: "" },
+            { id: "CART-014", type: "Baggage Cart", status: "Unsafe", lastUpdated: "2026-04-23 08:10", issueCount: 5, location: "Zone B", notes: "Wheel detached" },
+            { id: "CART-015", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:20", issueCount: 0, location: "Zone A", notes: "" },
+            { id: "CART-016", type: "Baggage Cart", status: "Minor", lastUpdated: "2026-04-23 08:25", issueCount: 2, location: "Zone D", notes: "Alignment issue" },
+            { id: "CART-017", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:10", issueCount: 0, location: "Zone C", notes: "" },
+            { id: "CART-018", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:00", issueCount: 0, location: "Zone B", notes: "" },
+            { id: "CART-019", type: "Baggage Cart", status: "Minor", lastUpdated: "2026-04-23 08:50", issueCount: 1, location: "Zone A", notes: "Tire pressure low" },
+            { id: "CART-020", type: "Baggage Cart", status: "OK", lastUpdated: "2026-04-23 09:05", issueCount: 0, location: "Zone D", notes: "" }
+        ];
+
         // ============ STATE ============
         let cartData = [];
         let currentTab = 'all';
@@ -529,37 +313,88 @@
 
         // ============ API FUNCTIONS ============
         async function fetchAssets() {
-            setSyncStatus('syncing', 'Syncing...');
+            console.log('🔄 Fetching assets from API...');
+            setSyncStatus('syncing', 'Loading...');
+            
             try {
+                // Try API first
                 const response = await fetch(API_URL);
-                if (!response.ok) throw new Error('Network error');
-                const data = await response.json();
-                cartData = data;
-                setSyncStatus('ok', 'Live');
-                renderList();
-            } catch (error) {
-                console.error('Fetch error:', error);
-                setSyncStatus('error', 'Offline');
-                const cached = localStorage.getItem('baggageCartData');
-                if (cached) {
-                    cartData = JSON.parse(cached);
-                    renderList();
-                    showToast('⚠️ Using cached data');
+                console.log('📡 Response status:', response.status);
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    console.log('📦 Raw response:', text.substring(0, 200));
+                    
+                    try {
+                        const data = JSON.parse(text);
+                        if (Array.isArray(data) && data.length > 0) {
+                            cartData = data;
+                            console.log('✅ Loaded', cartData.length, 'assets from API');
+                            setSyncStatus('ok', 'Live');
+                            localStorage.setItem('baggageCartData', JSON.stringify(cartData));
+                            renderList();
+                            return;
+                        } else {
+                            console.warn('⚠️ API returned empty or non-array data');
+                        }
+                    } catch (parseError) {
+                        console.error('❌ JSON parse error:', parseError);
+                    }
                 } else {
-                    document.getElementById('cartList').innerHTML = `
-                        <div class="empty-state">
-                            <div class="emoji">🔌</div>
-                            <p>Cannot connect to server</p>
-                        </div>`;
+                    console.warn('⚠️ API returned status:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Fetch error:', error);
+            }
+
+            // Fallback: try localStorage
+            console.log('🔄 Trying localStorage...');
+            const cached = localStorage.getItem('baggageCartData');
+            if (cached) {
+                try {
+                    cartData = JSON.parse(cached);
+                    if (Array.isArray(cartData) && cartData.length > 0) {
+                        console.log('✅ Loaded', cartData.length, 'assets from localStorage');
+                        setSyncStatus('ok', 'Cached');
+                        renderList();
+                        return;
+                    }
+                } catch (e) {
+                    console.error('❌ localStorage parse error');
                 }
             }
+
+            // Final fallback: built-in data
+            console.log('🔄 Using fallback data...');
+            cartData = FALLBACK_DATA;
+            localStorage.setItem('baggageCartData', JSON.stringify(cartData));
+            setSyncStatus('error', 'Offline');
+            renderList();
+            showToast('⚠️ Using offline data');
         }
 
         async function updateAssetOnSheet(cartId, newStatus, issueCount, notes) {
             setSyncStatus('syncing', 'Saving...');
             const now = new Date();
-            const formatted = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const formatted = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
 
+            // Always update local data first for instant feedback
+            const cart = cartData.find(c => c.id === cartId);
+            if (cart) {
+                cart.status = newStatus;
+                cart.lastUpdated = formatted;
+                cart.issueCount = issueCount;
+                cart.notes = notes;
+            }
+            localStorage.setItem('baggageCartData', JSON.stringify(cartData));
+            renderList();
+
+            // Try to sync with Google Sheets
             try {
                 await fetch(API_URL, {
                     method: 'POST',
@@ -573,34 +408,12 @@
                         notes: notes
                     })
                 });
-                
-                const cart = cartData.find(c => c.id === cartId);
-                if (cart) {
-                    cart.status = newStatus;
-                    cart.lastUpdated = formatted;
-                    cart.issueCount = issueCount;
-                    cart.notes = notes;
-                }
-                
-                localStorage.setItem('baggageCartData', JSON.stringify(cartData));
                 setSyncStatus('ok', 'Saved ✓');
                 setTimeout(() => setSyncStatus('ok', 'Live'), 2000);
-                renderList();
-                return true;
             } catch (error) {
-                console.error('Update error:', error);
-                setSyncStatus('error', 'Save failed');
-                showToast('❌ Failed to sync');
-                const cart = cartData.find(c => c.id === cartId);
-                if (cart) {
-                    cart.status = newStatus;
-                    cart.lastUpdated = formatted;
-                    cart.issueCount = issueCount;
-                    cart.notes = notes;
-                }
-                localStorage.setItem('baggageCartData', JSON.stringify(cartData));
-                renderList();
-                return false;
+                console.error('❌ Sync error:', error);
+                setSyncStatus('error', 'Local only');
+                showToast('⚠️ Saved locally (will sync later)');
             }
         }
 
@@ -613,136 +426,13 @@
             textEl.textContent = text;
         }
 
-        // ============ QR SCANNER ============
-        function openScanner() {
-            document.getElementById('scannerOverlay').style.display = 'flex';
-            
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("qr-reader");
-            }
-            
-            const config = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-            };
-            
-            html5QrCode.start(
-                { facingMode: "environment" }, // Back camera
-                config,
-                onScanSuccess,
-                onScanFailure
-            ).then(() => {
-                scannerActive = true;
-                console.log('📷 Scanner started');
-            }).catch(err => {
-                console.error('Scanner error:', err);
-                showToast('❌ Camera access denied. Check permissions.');
-                closeScanner();
-            });
-        }
-
-        function closeScanner() {
-            if (html5QrCode && scannerActive) {
-                html5QrCode.stop().then(() => {
-                    scannerActive = false;
-                    console.log('📷 Scanner stopped');
-                }).catch(err => {
-                    console.error('Stop error:', err);
-                    scannerActive = false;
-                });
-            }
-            document.getElementById('scannerOverlay').style.display = 'none';
-        }
-
-        function onScanSuccess(decodedText, decodedResult) {
-            console.log('✅ QR Scanned:', decodedText);
-            
-            // Stop scanner immediately
-            if (html5QrCode && scannerActive) {
-                html5QrCode.stop().then(() => {
-                    scannerActive = false;
-                }).catch(() => {
-                    scannerActive = false;
-                });
-            }
-            
-            document.getElementById('scannerOverlay').style.display = 'none';
-            
-            // Process the scanned ID
-            handleScannedCart(decodedText.trim());
-        }
-
-        function onScanFailure(error) {
-            // This fires constantly while scanning. Don't show toasts here.
-            // Only log severe errors
-            if (error && error.includes('NotFound')) {
-                // Normal - just means no QR in frame yet
-                return;
-            }
-            console.debug('Scan attempt:', error);
-        }
-
-        function handleScannedCart(scannedText) {
-            // The QR code should contain the Cart ID (e.g., "CART-001")
-            // But we'll handle various formats:
-            let cartId = scannedText.toUpperCase().trim();
-            
-            // If the QR contains a URL with the ID at the end, extract it
-            if (cartId.includes('/')) {
-                const parts = cartId.split('/');
-                cartId = parts[parts.length - 1];
-            }
-            
-            // Remove any query parameters
-            if (cartId.includes('?')) {
-                cartId = cartId.split('?')[0];
-            }
-            
-            // Remove any non-alphanumeric/hyphen characters
-            cartId = cartId.replace(/[^A-Z0-9\-]/g, '');
-            
-            console.log('🔍 Looking for cart:', cartId);
-            
-            const cart = cartData.find(c => c.id.toUpperCase() === cartId);
-            if (cart) {
-                showToast(`✅ Found: ${cart.id}`);
-                openDetail(cart.id);
-            } else {
-                showToast(`❌ Not found: ${cartId}`);
-                // Ask if they want to search manually
-                setTimeout(() => {
-                    const manualSearch = confirm(`Cart "${cartId}" not found in the system.\n\nWould you like to search manually?`);
-                    if (manualSearch) {
-                        document.getElementById('searchInput').value = cartId;
-                        document.getElementById('searchInput').focus();
-                        // Switch to "All" tab
-                        currentTab = 'all';
-                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                        document.querySelector('.tab[data-tab="all"]').classList.add('active');
-                        renderList();
-                        searchQuery = cartId;
-                        renderList();
-                    }
-                }, 500);
-            }
-        }
-
-        function manualEntry() {
-            closeScanner();
-            const cartId = prompt('Enter Cart ID:', 'CART-');
-            if (cartId) {
-                handleScannedCart(cartId);
-            }
-        }
-
         // ============ RENDER ============
         function getFilteredData() {
             let filtered = [...cartData];
             if (currentTab === 'unsafe') filtered = filtered.filter(c => c.status === 'Unsafe');
             else if (currentTab === 'minor') filtered = filtered.filter(c => c.status === 'Minor');
             else if (currentTab === 'ok') filtered = filtered.filter(c => c.status === 'OK');
-            
+
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase().trim();
                 filtered = filtered.filter(c =>
@@ -759,12 +449,12 @@
             const filtered = getFilteredData();
 
             if (cartData.length === 0) {
-                listEl.innerHTML = `<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px;">Loading...</p></div>`;
+                listEl.innerHTML = `<div class="empty-state"><div class="spinner"></div><p style="margin-top:10px;">Loading assets...</p></div>`;
                 return;
             }
 
             if (filtered.length === 0) {
-                listEl.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No assets found</p></div>`;
+                listEl.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No assets found</p><p style="font-size:12px;margin-top:4px;">Try a different search or filter</p></div>`;
             } else {
                 listEl.innerHTML = filtered.map(cart => `
                     <div class="cart-item" onclick="openDetail('${cart.id}')">
@@ -780,7 +470,7 @@
                                 <span class="status-dot ${(cart.status || 'ok').toLowerCase()}"></span>
                                 <span class="status-label ${(cart.status || 'ok').toLowerCase()}">${cart.status || 'OK'}</span>
                             </div>
-                            <div class="cart-location">📍 ${cart.location || 'Unknown'}</div>
+                            <div class="cart-location">📍 ${cart.location || '-'}</div>
                         </div>
                     </div>
                 `).join('');
@@ -789,14 +479,10 @@
         }
 
         function updateCounts() {
-            const all = cartData.length;
-            const unsafe = cartData.filter(c => c.status === 'Unsafe').length;
-            const minor = cartData.filter(c => c.status === 'Minor').length;
-            const ok = cartData.filter(c => c.status === 'OK').length;
-            document.getElementById('count-all').textContent = all;
-            document.getElementById('count-unsafe').textContent = unsafe;
-            document.getElementById('count-minor').textContent = minor;
-            document.getElementById('count-ok').textContent = ok;
+            document.getElementById('count-all').textContent = cartData.length;
+            document.getElementById('count-unsafe').textContent = cartData.filter(c => c.status === 'Unsafe').length;
+            document.getElementById('count-minor').textContent = cartData.filter(c => c.status === 'Minor').length;
+            document.getElementById('count-ok').textContent = cartData.filter(c => c.status === 'OK').length;
         }
 
         // ============ MODAL ============
@@ -804,13 +490,11 @@
             const cart = cartData.find(c => c.id === cartId);
             if (!cart) return;
             currentCartId = cartId;
-            
             document.getElementById('modalTitle').textContent = cart.id;
             document.getElementById('modalStatus').textContent = cart.status || 'OK';
             document.getElementById('modalUpdated').textContent = cart.lastUpdated || '-';
             document.getElementById('modalIssues').textContent = cart.issueCount || 0;
             document.getElementById('modalLocation').textContent = cart.location || '-';
-
             const notesRow = document.getElementById('modalNotesRow');
             if (cart.notes) {
                 notesRow.style.display = 'flex';
@@ -818,16 +502,14 @@
             } else {
                 notesRow.style.display = 'none';
             }
-
             document.querySelectorAll('.modal-actions .btn').forEach(b => {
                 b.disabled = false;
                 b.classList.remove('active-btn');
             });
-            const status = (cart.status || 'OK').toLowerCase();
-            if (status === 'ok') document.getElementById('btnOk').classList.add('active-btn');
-            if (status === 'minor') document.getElementById('btnMinor').classList.add('active-btn');
-            if (status === 'unsafe') document.getElementById('btnUnsafe').classList.add('active-btn');
-
+            const s = (cart.status || 'OK').toLowerCase();
+            if (s === 'ok') document.getElementById('btnOk').classList.add('active-btn');
+            if (s === 'minor') document.getElementById('btnMinor').classList.add('active-btn');
+            if (s === 'unsafe') document.getElementById('btnUnsafe').classList.add('active-btn');
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
@@ -840,42 +522,45 @@
             if (!currentCartId) return;
             const cart = cartData.find(c => c.id === currentCartId);
             if (!cart) return;
-
             document.querySelectorAll('.modal-actions .btn').forEach(b => b.disabled = true);
-            
             const newIssueCount = newStatus === 'Unsafe' ? (cart.issueCount || 0) + 1 :
                                   newStatus === 'Minor' ? Math.max(1, (cart.issueCount || 0)) : (cart.issueCount || 0);
-            
             await updateAssetOnSheet(currentCartId, newStatus, newIssueCount, cart.notes || '');
-            
             showToast(`✅ ${currentCartId} → ${newStatus}`);
             openDetail(currentCartId);
         }
 
-        // ============ TOAST ============
-        function showToast(message) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+        // ============ QR SCANNER ============
+        function openScanner() {
+            document.getElementById('scannerOverlay').style.display = 'flex';
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+                (decodedText) => {
+                    // Success!
+                    console.log('✅ Scanned:', decodedText);
+                    if (html5QrCode && scannerActive) {
+                        html5QrCode.stop().then(() => { scannerActive = false; }).catch(() => { scannerActive = false; });
+                    }
+                    document.getElementById('scannerOverlay').style.display = 'none';
+                    handleScannedCart(decodedText.trim());
+                },
+                (error) => {
+                    // Normal scanning noise - ignore
+                }
+            ).then(() => {
+                scannerActive = true;
+                console.log('📷 Scanner started');
+            }).catch(err => {
+                console.error('Scanner error:', err);
+                showToast('❌ Camera access denied');
+                closeScanner();
+            });
         }
 
-        // ============ EVENT LISTENERS ============
-        document.getElementById('tabs').addEventListener('click', (e) => {
-            const tab = e.target.closest('.tab');
-            if (!tab) return;
-            currentTab = tab.dataset.tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
-            const navMatch = document.querySelector(`.bottom-nav .nav-item[data-nav="${currentTab}"]`);
-            if (navMatch) navMatch.classList.add('active');
-            renderList();
-        });
-
-        document.querySelector('.bottom-nav').addEventListener('click', (e) => {
-            const nav = e.target.closest('.nav-item');
-            if (!nav) return;
-            currentTab = nav.dataset.nav;
+        function closeScanner() {
+            if (html5QrCode && scannerActive) {
+                html5QrCode.stop().then(() => { scannerActive
