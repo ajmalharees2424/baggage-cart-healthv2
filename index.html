@@ -9,458 +9,726 @@
         :root {
             --bg: #f5f5f5; --card-bg: #ffffff; --text: #1a1a1a;
             --text-secondary: #666666; --border: #e0e0e0;
-            --ok: #4CAF50; --minor: #FF9800; --unsafe: #F44336; --accent-blue: #0D47A1;
+            --ok: #4CAF50; --minor: #FF9800; --unsafe: #F44336; --accent: #0D47A1;
             --ramp-orange: #E65100; --tower-blue: #01579B;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg); color: var(--text);
-            max-width: 480px; margin: 0 auto; min-height: 100vh; -webkit-tap-highlight-color: transparent;
+            max-width: 480px; margin: 0 auto; min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
-        /* Login */
-        .login-screen { display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; padding:20px; background:linear-gradient(135deg,#0D47A1,#01579B,#1A237E); }
-        .login-card { background:#fff; border-radius:16px; padding:28px 20px; width:100%; max-width:380px; box-shadow:0 6px 24px rgba(0,0,0,0.4); }
-        .login-logo { text-align:center; margin-bottom:20px; }
-        .login-logo h1 { font-size:22px; font-weight:800; color:#0D47A1; }
-        .login-logo p { font-size:11px; color:#666; margin-top:4px; }
-        .login-card label { font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px; }
-        .login-card input,.login-card select { width:100%; padding:12px 12px; border:1.5px solid #e0e0e0; border-radius:8px; font-size:14px; margin-bottom:14px; outline:none; background:#f9f9f9; }
-        .login-card input:focus,.login-card select:focus { border-color:#0D47A1; background:#fff; }
-        .role-indicator { display:flex; gap:8px; margin-bottom:14px; }
-        .role-card { flex:1; padding:12px 4px; border:2px solid #e0e0e0; border-radius:8px; text-align:center; cursor:pointer; transition:all 0.2s; }
-        .role-card.selected { border-color:#0D47A1; background:#E3F2FD; }
-        .role-card .role-icon { font-size:26px; display:block; margin-bottom:2px; }
-        .role-card .role-name { font-size:11px; font-weight:600; }
-        .role-card .role-desc { font-size:9px; color:#999; }
-        .login-btn { width:100%; padding:14px; background:#0D47A1; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; }
-        .login-error { color:#F44336; font-size:11px; text-align:center; min-height:16px; margin-top:6px; }
-        /* App */
-        .app-container { display:none; }
-        .header { background:#fff; padding:10px 14px; position:sticky; top:0; z-index:100; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
-        .header h1 { font-size:16px; font-weight:700; }
-        .user-badge { font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; color:#fff; text-transform:uppercase; }
-        .user-badge.ramp { background:var(--ramp-orange); }
-        .user-badge.tower { background:var(--tower-blue); }
-        .logout-btn { font-size:10px; color:#F44336; background:none; border:none; cursor:pointer; font-weight:600; }
-        .sync-indicator { font-size:9px; color:#999; display:flex; align-items:center; gap:3px; }
-        .sync-dot { width:6px; height:6px; border-radius:50%; background:#4CAF50; }
-        .sync-dot.syncing { background:#FF9800; animation:pulse 1s infinite; }
-        .sync-dot.error { background:#F44336; }
+
+        /* ========== LOGIN ========== */
+        .login-screen {
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; min-height: 100vh; padding: 20px;
+            background: linear-gradient(135deg, #0D47A1 0%, #01579B 50%, #1A237E 100%);
+        }
+        .login-card {
+            background: #fff; border-radius: 20px; padding: 32px 24px;
+            width: 100%; max-width: 380px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .login-logo { text-align: center; margin-bottom: 24px; }
+        .login-logo .icon { font-size: 48px; }
+        .login-logo h1 { font-size: 20px; font-weight: 800; color: #0D47A1; margin-top: 4px; }
+        .login-logo p { font-size: 11px; color: #999; }
+        .login-card label {
+            font-size: 11px; font-weight: 700; color: #555;
+            display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .login-card input {
+            width: 100%; padding: 14px; border: 2px solid #e0e0e0;
+            border-radius: 12px; font-size: 15px; margin-bottom: 16px; outline: none;
+            background: #fafafa;
+        }
+        .login-card input:focus { border-color: #0D47A1; background: #fff; }
+        .role-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+        .role-option {
+            flex: 1; padding: 16px 8px; border: 2px solid #e8e8e8;
+            border-radius: 12px; text-align: center; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .role-option.selected { border-color: #0D47A1; background: #E3F2FD; }
+        .role-option .role-icon { font-size: 32px; display: block; }
+        .role-option .role-title { font-size: 13px; font-weight: 700; margin-top: 4px; }
+        .role-option .role-sub { font-size: 10px; color: #999; }
+        .login-btn {
+            width: 100%; padding: 16px; background: #0D47A1; color: #fff;
+            border: none; border-radius: 12px; font-size: 16px; font-weight: 700;
+            cursor: pointer; letter-spacing: 0.5px;
+        }
+        .login-error { color: #C62828; font-size: 12px; text-align: center; margin-top: 8px; min-height: 18px; }
+        .demo-info { font-size: 10px; color: #bbb; text-align: center; margin-top: 16px; line-height: 1.6; }
+
+        /* ========== APP LAYOUT ========== */
+        .app-container { display: none; }
+        .header {
+            background: #fff; padding: 12px 16px; position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid var(--border); box-shadow: var(--shadow);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 { font-size: 18px; font-weight: 700; }
+        .user-badge {
+            font-size: 10px; padding: 3px 10px; border-radius: 12px;
+            font-weight: 700; color: #fff; text-transform: uppercase;
+        }
+        .user-badge.ramp { background: var(--ramp-orange); }
+        .user-badge.tower { background: var(--tower-blue); }
+        .sync-indicator { font-size: 11px; color: #999; display: flex; align-items: center; gap: 4px; }
+        .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4CAF50; }
+        .sync-dot.syncing { background: #FF9800; animation: pulse 1s infinite; }
+        .sync-dot.error { background: #F44336; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-        .search-container { padding:8px 14px; background:#fff; border-bottom:1px solid var(--border); }
-        .search-row { display:flex; gap:6px; }
-        .search-input { flex:1; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; background:#f9f9f9; outline:none; }
-        .filter-select { padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:12px; background:#f9f9f9; outline:none; max-width:120px; }
-        .stats-bar { display:flex; gap:4px; padding:6px 10px; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
-        .stat-card { flex:1; min-width:50px; text-align:center; padding:6px 2px; border-radius:6px; cursor:pointer; border:2px solid transparent; font-size:11px; }
-        .stat-card.active { border-color:var(--accent-blue); }
-        .stat-num { font-size:18px; font-weight:700; display:block; }
-        .stat-label { font-size:8px; color:#999; text-transform:uppercase; }
-        .stat-card.ok { background:#E8F5E9; } .stat-card.ok .stat-num { color:#4CAF50; }
-        .stat-card.minor { background:#FFF3E0; } .stat-card.minor .stat-num { color:#FF9800; }
-        .stat-card.unsafe { background:#FFEBEE; } .stat-card.unsafe .stat-num { color:#F44336; }
-        .stat-card.all { background:#E3F2FD; } .stat-card.all .stat-num { color:#0D47A1; }
-        .list { padding:4px 10px 80px; background:#fff; min-height:50vh; }
-        .cart-item { display:flex; align-items:center; padding:8px 0; border-bottom:1px solid #f0f0f0; cursor:pointer; gap:6px; font-size:12px; }
-        .cart-icon { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; font-weight:700; }
-        .cart-icon.OK { background:#E8F5E9; color:#4CAF50; } .cart-icon.Minor { background:#FFF3E0; color:#FF9800; } .cart-icon.Unsafe { background:#FFEBEE; color:#F44336; }
-        .cart-info { flex:1; min-width:0; }
-        .cart-id { font-weight:600; font-size:12px; } .cart-type { font-size:10px; color:#666; }
-        .cart-meta { text-align:right; }
-        .status-dot { display:inline-block; width:5px; height:5px; border-radius:50%; margin-right:2px; }
-        .status-dot.OK { background:#4CAF50; } .status-dot.Minor { background:#FF9800; } .status-dot.Unsafe { background:#F44336; }
-        .status-label { font-size:9px; font-weight:600; text-transform:uppercase; }
-        .status-label.OK { color:#4CAF50; } .status-label.Minor { color:#FF9800; } .status-label.Unsafe { color:#F44336; }
-        .cart-location { font-size:8px; color:#999; }
-        .pagination { display:flex; justify-content:center; gap:6px; padding:10px; background:#fff; }
-        .page-btn { padding:4px 10px; border:1px solid #ddd; border-radius:4px; background:#fff; font-size:11px; cursor:pointer; }
-        .page-btn.active { background:var(--accent-blue); color:#fff; border-color:var(--accent-blue); }
-        /* Modal */
-        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:none; align-items:flex-end; }
-        .modal-overlay.show { display:flex; }
-        .modal { background:#fff; width:100%; max-width:480px; margin:0 auto; border-radius:14px 14px 0 0; padding:6px 0 18px; max-height:85vh; overflow-y:auto; }
-        .modal-handle { width:28px; height:4px; background:#ddd; border-radius:2px; margin:0 auto 10px; }
-        .modal-header { padding:0 18px 10px; border-bottom:1px solid #e0e0e0; }
-        .modal-header h2 { font-size:18px; font-weight:700; }
-        .modal-body { padding:10px 18px; }
-        .detail-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f5f5f5; font-size:12px; }
-        .detail-label { color:#666; } .detail-value { font-weight:500; }
-        .modal-actions { display:flex; gap:6px; padding:10px 18px; }
-        .btn { flex:1; padding:10px 4px; border:2px solid transparent; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; text-align:center; }
-        .btn-ok { background:#E8F5E9; color:#4CAF50; border-color:#4CAF50; } .btn-ok.active { background:#4CAF50; color:#fff; }
-        .btn-minor { background:#FFF3E0; color:#FF9800; border-color:#FF9800; } .btn-minor.active { background:#FF9800; color:#fff; }
-        .btn-unsafe { background:#FFEBEE; color:#F44336; border-color:#F44336; } .btn-unsafe.active { background:#F44336; color:#fff; }
-        .btn-close { width:calc(100% - 36px); margin:4px 18px; padding:10px; background:#f5f5f5; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#666; }
-        .tower-note { display:none; padding:0 18px 10px; }
-        .tower-note textarea { width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:11px; resize:vertical; min-height:40px; }
-        /* Scanner */
-        .scanner-overlay { position:fixed; inset:0; background:#000; z-index:500; display:none; flex-direction:column; }
-        .scanner-overlay.show { display:flex; }
-        .scanner-header { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#000; color:#fff; }
-        .scanner-close { background:rgba(255,255,255,0.2); border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:14px; cursor:pointer; }
-        .scanner-container { flex:1; position:relative; overflow:hidden; }
-        #qr-reader { width:100%; height:100%; }
-        #qr-reader__dashboard_section_csr,#qr-reader__dashboard_section_swaplink { display:none!important; }
-        .scanner-footer { padding:12px; background:#000; color:#fff; text-align:center; }
-        .scanner-manual-btn { width:100%; padding:10px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); border-radius:6px; color:#fff; font-size:12px; font-weight:600; cursor:pointer; }
-        .scanner-frame { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:180px; height:180px; border:3px solid #2196F3; border-radius:14px; box-shadow:0 0 0 2000px rgba(0,0,0,0.5); pointer-events:none; z-index:502; }
-        .qr-fab { position:fixed; bottom:65px; right:10px; width:46px; height:46px; border-radius:50%; background:#2196F3; color:#fff; border:none; font-size:20px; cursor:pointer; box-shadow:0 4px 12px rgba(33,150,243,0.5); z-index:160; display:none; align-items:center; justify-content:center; }
-        .toast { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:8px 14px; border-radius:14px; font-size:11px; z-index:600; pointer-events:none; white-space:nowrap; }
+        .logout-btn { font-size: 11px; color: #F44336; background: none; border: none; font-weight: 600; cursor: pointer; }
+
+        /* ========== RAMP VIEW ========== */
+        .ramp-view { display: none; }
+        .ramp-view.active { display: block; }
+        .search-container { padding: 10px 16px; background: #fff; border-bottom: 1px solid var(--border); }
+        .search-input {
+            width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+            border-radius: 8px; font-size: 15px; background: #f9f9f9; outline: none;
+        }
+        .search-input:focus { border-color: var(--accent); background: #fff; }
+        .tabs {
+            display: flex; background: #fff; border-bottom: 1px solid var(--border);
+            position: sticky; top: 56px; z-index: 99;
+        }
+        .tab {
+            flex: 1; text-align: center; padding: 12px 8px; font-size: 13px;
+            font-weight: 600; border: none; background: none; cursor: pointer;
+            color: var(--text-secondary); border-bottom: 2px solid transparent;
+            white-space: nowrap; transition: all 0.2s;
+        }
+        .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+        .tab-badge {
+            display: inline-block; background: #eee; border-radius: 10px;
+            padding: 2px 8px; font-size: 11px; margin-left: 4px; font-weight: 500;
+        }
+        .tab.active .tab-badge { background: #e3f2fd; color: var(--accent); }
+        .list { padding: 8px 16px 100px; background: #fff; min-height: 60vh; }
+        .cart-item {
+            display: flex; align-items: center; padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0; cursor: pointer; gap: 12px;
+            transition: background 0.15s;
+        }
+        .cart-item:active { background: #f5f5f5; margin: 0 -16px; padding: 14px 16px; }
+        .cart-icon {
+            width: 44px; height: 44px; border-radius: 10px; display: flex;
+            align-items: center; justify-content: center; font-size: 20px;
+            flex-shrink: 0; font-weight: 700;
+        }
+        .cart-icon.OK { background: #E8F5E9; color: var(--ok); }
+        .cart-icon.Minor { background: #FFF3E0; color: var(--minor); }
+        .cart-icon.Unsafe { background: #FFEBEE; color: var(--unsafe); }
+        .cart-info { flex: 1; min-width: 0; }
+        .cart-id { font-weight: 600; font-size: 15px; }
+        .cart-type { font-size: 13px; color: var(--text-secondary); }
+        .cart-meta { text-align: right; flex-shrink: 0; }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+        .status-dot.OK { background: var(--ok); }
+        .status-dot.Minor { background: var(--minor); }
+        .status-dot.Unsafe { background: var(--unsafe); }
+        .status-label {
+            font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .status-label.OK { color: var(--ok); }
+        .status-label.Minor { color: var(--minor); }
+        .status-label.Unsafe { color: var(--unsafe); }
+        .cart-location { font-size: 11px; color: #999; margin-top: 2px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+        .pagination { display: flex; justify-content: center; gap: 6px; padding: 12px; background: #fff; }
+        .page-btn {
+            padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px;
+            background: #fff; font-size: 12px; cursor: pointer;
+        }
+        .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* ========== TOWER VIEW ========== */
+        .tower-view { display: none; }
+        .tower-view.active { display: block; }
+        .tower-tabs {
+            display: flex; background: #fff; border-bottom: 2px solid var(--border);
+            position: sticky; top: 48px; z-index: 99;
+        }
+        .tower-tab {
+            flex: 1; text-align: center; padding: 14px 4px; font-size: 11px;
+            font-weight: 700; border: none; background: none; cursor: pointer;
+            color: #888; border-bottom: 3px solid transparent; text-transform: uppercase;
+        }
+        .tower-tab.active { color: var(--tower-blue); border-bottom-color: var(--tower-blue); }
+        .tower-panel { padding: 16px 12px 80px; background: #fff; }
+        .panel-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+        .wo-card {
+            background: #fff; border: 1px solid #eee; border-radius: 12px;
+            padding: 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .wo-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+        .wo-id { font-weight: 700; font-size: 13px; color: var(--tower-blue); }
+        .wo-priority { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 12px; color: #fff; text-transform: uppercase; }
+        .wo-priority.Critical { background: #B71C1C; }
+        .wo-priority.High { background: #E65100; }
+        .wo-priority.Medium { background: #F9A825; color: #333; }
+        .wo-priority.Low { background: #558B2F; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { font-size: 11px; font-weight: 700; color: #555; display: block; margin-bottom: 4px; text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px; border: 1.5px solid #ddd;
+            border-radius: 10px; font-size: 14px; background: #fafafa; outline: none; font-family: inherit;
+        }
+        .form-group textarea { min-height: 70px; resize: vertical; }
+        .submit-btn { width: 100%; padding: 14px; background: var(--tower-blue); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+        /* ========== MODALS ========== */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 200; display: none; align-items: flex-end;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #fff; width: 100%; max-width: 480px; margin: 0 auto;
+            border-radius: 16px 16px 0 0; padding: 8px 0 24px;
+            max-height: 85vh; overflow-y: auto;
+        }
+        .modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+        .modal-header { padding: 0 20px 16px; border-bottom: 1px solid var(--border); }
+        .modal-header h2 { font-size: 22px; font-weight: 700; }
+        .modal-body { padding: 16px 20px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; }
+        .detail-label { color: var(--text-secondary); }
+        .detail-value { font-weight: 500; }
+        .modal-actions { display: flex; gap: 10px; padding: 16px 20px; flex-wrap: wrap; }
+        .btn {
+            flex: 1; min-width: 80px; padding: 14px 12px; border: 2px solid transparent;
+            border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+            text-align: center; transition: all 0.15s;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-ok { background: #E8F5E9; color: var(--ok); border-color: var(--ok); }
+        .btn-ok.active-btn { background: var(--ok); color: #fff; }
+        .btn-minor { background: #FFF3E0; color: var(--minor); border-color: var(--minor); }
+        .btn-minor.active-btn { background: var(--minor); color: #fff; }
+        .btn-unsafe { background: #FFEBEE; color: var(--unsafe); border-color: var(--unsafe); }
+        .btn-unsafe.active-btn { background: var(--unsafe); color: #fff; }
+        .btn-close { width: calc(100% - 40px); margin: 8px 20px; padding: 14px; background: #f5f5f5; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; color: #666; }
+
+        /* ========== QR ========== */
+        .qr-fab {
+            position: fixed; bottom: 60px; right: 14px; width: 52px; height: 52px;
+            border-radius: 50%; background: var(--accent); color: #fff;
+            border: none; font-size: 22px; cursor: pointer;
+            box-shadow: 0 4px 16px rgba(13,71,161,0.4); z-index: 160;
+            display: none; align-items: center; justify-content: center;
+        }
+        .scanner-overlay { position: fixed; inset: 0; background: #000; z-index: 500; display: none; flex-direction: column; }
+        .scanner-overlay.show { display: flex; }
+        .scanner-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #000; color: #fff; }
+        .scanner-close { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+        .scanner-container { flex: 1; position: relative; overflow: hidden; }
+        #qr-reader { width: 100%; height: 100%; }
+        .scanner-footer { padding: 14px; background: #000; color: #fff; text-align: center; }
+        .scanner-manual-btn { width: 100%; padding: 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 600; pointer-events: none; white-space: nowrap; }
     </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
 <div class="login-screen" id="loginScreen">
- <div class="login-card">
-   <div class="login-logo"><h1>🛫 GSE Health System</h1><p>Ground Support Equipment Monitoring</p></div>
-   <label>Select Role</label>
-   <div class="role-indicator" id="roleSelector">
-     <div class="role-card selected" data-role="ramp"><span class="role-icon">👷</span><span class="role-name">Ramp Agent</span><span class="role-desc">GSE Inspection & Status</span></div>
-     <div class="role-card" data-role="tower"><span class="role-icon">🗼</span><span class="role-name">Ramp Tower Controller</span><span class="role-desc">Oversight & Coordination</span></div>
-   </div>
-   <label for="userId">User ID</label>
-   <input type="text" id="userId" placeholder="e.g. RA-101 or RTC-001" autocomplete="off">
-   <label for="userPin">PIN</label>
-   <input type="password" id="userPin" placeholder="••••" maxlength="6" autocomplete="off">
-   <button class="login-btn" id="loginBtn">Sign In</button>
-   <div class="login-error" id="loginError"></div>
-   <p style="font-size:9px;color:#999;text-align:center;margin-top:10px;">Demo: RA-101 / 1234 | RTC-001 / 5678</p>
- </div>
+    <div class="login-card">
+        <div class="login-logo">
+            <span class="icon">🛫</span>
+            <h1>GSE Health System</h1>
+            <p>Ground Support Equipment Management</p>
+        </div>
+        <label>Select Role</label>
+        <div class="role-selector" id="roleSelector">
+            <div class="role-option selected" data-role="ramp">
+                <span class="role-icon">👷</span>
+                <span class="role-title">Ramp Agent</span>
+                <span class="role-sub">Inspection & Status</span>
+            </div>
+            <div class="role-option" data-role="tower">
+                <span class="role-icon">🗼</span>
+                <span class="role-title">Ramp Controller</span>
+                <span class="role-sub">Oversight & Repairs</span>
+            </div>
+        </div>
+        <label>User ID</label>
+        <input type="text" id="userId" placeholder="RA-101 or RTC-001" autocomplete="off">
+        <label>PIN</label>
+        <input type="password" id="userPin" placeholder="••••" maxlength="6" autocomplete="off">
+        <button class="login-btn" id="loginBtn">Sign In</button>
+        <div class="login-error" id="loginError"></div>
+        <div class="demo-info">👷 Ramp: RA-101 / 1234<br>🗼 Tower: RTC-001 / 5678</div>
+    </div>
 </div>
 
+<!-- MAIN APP -->
 <div class="app-container" id="appContainer">
-  <div class="header">
-    <div style="display:flex;align-items:center;gap:6px;"><h1>🛫 GSE Health</h1><span class="user-badge" id="userBadge">Ramp</span></div>
-    <div style="display:flex;align-items:center;gap:6px;"><div class="sync-indicator"><span class="sync-dot" id="syncDot"></span><span id="syncText">Live</span></div><button class="logout-btn" id="logoutBtn">Logout</button></div>
-  </div>
-  <div class="search-container"><div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="🔍 Asset ID, Type, Location..."><select class="filter-select" id="typeFilter"><option value="all">All Types</option></select></div></div>
-  <div class="stats-bar" id="statsBar">
-    <div class="stat-card all active" data-tab="all"><span class="stat-num" id="statAll">0</span><span class="stat-label">Total Fleet</span></div>
-    <div class="stat-card ok" data-tab="OK"><span class="stat-num" id="statOk">0</span><span class="stat-label">OK</span></div>
-    <div class="stat-card minor" data-tab="Minor"><span class="stat-num" id="statMinor">0</span><span class="stat-label">Minor</span></div>
-    <div class="stat-card unsafe" data-tab="Unsafe"><span class="stat-num" id="statUnsafe">0</span><span class="stat-label">Unsafe</span></div>
-  </div>
-  <div class="list" id="cartList"><div class="empty-state"><p>Loading equipment...</p></div></div>
-  <div class="pagination" id="pagination"></div>
+    <div class="header">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <h1>🚛 GSE Assets</h1>
+            <span class="user-badge" id="userBadge">RAMP</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div class="sync-indicator">
+                <span class="sync-dot" id="syncDot"></span>
+                <span id="syncText">Ready</span>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <!-- RAMP VIEW -->
+    <div class="ramp-view active" id="rampView">
+        <div class="search-container">
+            <input type="text" class="search-input" id="rampSearch" placeholder="🔍 Search by Asset ID, Type, or Location...">
+        </div>
+        <div class="tabs" id="rampTabs">
+            <button class="tab active" data-tab="all">All<span class="tab-badge" id="count-all">0</span></button>
+            <button class="tab" data-tab="Unsafe">Unsafe<span class="tab-badge" id="count-unsafe">0</span></button>
+            <button class="tab" data-tab="Minor">Minor Issue<span class="tab-badge" id="count-minor">0</span></button>
+            <button class="tab" data-tab="OK">OK Assets<span class="tab-badge" id="count-ok">0</span></button>
+        </div>
+        <div class="list" id="rampList"></div>
+        <div class="pagination" id="rampPagination"></div>
+    </div>
+
+    <!-- TOWER VIEW -->
+    <div class="tower-view" id="towerView">
+        <div class="tower-tabs" id="towerTabs">
+            <button class="tower-tab active" data-panel="overview">📊 Overview</button>
+            <button class="tower-tab" data-panel="unsafe">🔴 Unsafe Assets</button>
+            <button class="tower-tab" data-panel="workorders">🔧 Work Orders</button>
+            <button class="tower-tab" data-panel="create">➕ New Order</button>
+        </div>
+        <div class="tower-panel" id="towerPanel"></div>
+    </div>
 </div>
 
+<!-- QR FAB -->
 <button class="qr-fab" id="qrFab">📷</button>
 
-<div class="modal-overlay" id="modalOverlay">
- <div class="modal">
-   <div class="modal-handle"></div>
-   <div class="modal-header"><h2 id="modalTitle">-</h2><span style="font-size:11px;color:#666" id="modalType">-</span></div>
-   <div class="modal-body">
-     <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" id="modalStatus">-</span></div>
-     <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value" id="modalLocation">-</span></div>
-     <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value" id="modalUpdated">-</span></div>
-     <div class="detail-row"><span class="detail-label">Issue Count</span><span class="detail-value" id="modalIssues">0</span></div>
-     <div class="detail-row"><span class="detail-label">Inspector</span><span class="detail-value" id="modalInspector">-</span></div>
-     <div class="detail-row" id="modalNotesRow"><span class="detail-label">Notes</span><span class="detail-value" id="modalNotes">-</span></div>
-   </div>
-   <div class="tower-note" id="towerNoteSection"><label style="font-size:10px;font-weight:600;">Coordination Note:</label><textarea id="towerNoteInput" placeholder="Enter note for crew..."></textarea></div>
-   <div class="modal-actions" id="modalActions">
-     <button class="btn btn-ok" id="btnOk">✓ OK</button>
-     <button class="btn btn-minor" id="btnMinor">⚠ Minor</button>
-     <button class="btn btn-unsafe" id="btnUnsafe">✕ Unsafe</button>
-   </div>
-   <button class="btn-close" id="btnClose">Close</button>
- </div>
-</div>
+<!-- MODALS -->
+<div class="modal-overlay" id="assetModal"><div class="modal" id="assetModalContent"></div></div>
+<div class="modal-overlay" id="woModal"><div class="modal" id="woModalContent"></div></div>
 
+<!-- SCANNER -->
 <div class="scanner-overlay" id="scannerOverlay">
- <div class="scanner-header"><h3>📷 Scan QR</h3><button class="scanner-close" id="scannerClose">✕</button></div>
- <div class="scanner-container"><div id="qr-reader"></div><div class="scanner-frame"></div></div>
- <div class="scanner-footer"><p style="font-size:10px;">Point at equipment QR tag</p><button class="scanner-manual-btn" id="scannerManual">⌨️ Enter ID Manually</button></div>
+    <div class="scanner-header"><h3>📷 Scan QR Code</h3><button class="scanner-close" id="scannerClose">✕</button></div>
+    <div class="scanner-container"><div id="qr-reader"></div></div>
+    <div class="scanner-footer"><button class="scanner-manual-btn" id="scannerManual">⌨️ Enter ID Manually</button></div>
 </div>
 
 <div id="toastContainer"></div>
 
 <script>
-(function(){
-const API_URL = 'https://script.google.com/macros/s/AKfycbxDK9_pcR0Jnw4So20g53M0ZFaelOh3ioyfXFRfP2KmHk_JjlZPPw1peAcBkCD_SxV8IQ/exec';
-const PAGE_SIZE = 20;
+(function() {
+    // ========== USER DATABASE ==========
+    const USERS = {
+        'RA-101': { pin: '1234', role: 'ramp', name: 'Marcus "Apex" Williams', station: 'ORD' },
+        'RA-102': { pin: '1234', role: 'ramp', name: 'Luis "Ghost" Rodriguez', station: 'ORD' },
+        'RTC-001': { pin: '5678', role: 'tower', name: 'Sarah "Eagle" Mitchell', station: 'ORD Tower' },
+        'RTC-002': { pin: '5678', role: 'tower', name: 'David "Sentinel" Chen', station: 'ORD Tower' }
+    };
 
-// User DB
-const USERS = {
-  'RA-101':{pin:'1234',role:'ramp',name:'Marcus "Apex" Williams',station:'ORD'},
-  'RA-102':{pin:'1234',role:'ramp',name:'Luis "Ghost" Rodriguez',station:'ORD'},
-  'RTC-001':{pin:'5678',role:'tower',name:'Sarah "Eagle" Mitchell',station:'ORD Tower'},
-  'RTC-002':{pin:'5678',role:'tower',name:'David "Sentinel" Chen',station:'ORD Tower'}
-};
+    // ========== STATE ==========
+    let currentUser = null;
+    let allAssets = [];
+    let workOrders = [];
+    let currentTab = 'all';
+    let searchQuery = '';
+    let currentPage = 1;
+    const PAGE_SIZE = 20;
+    let towerPanel = 'overview';
+    let html5QrCode = null;
+    let scannerActive = false;
 
-let currentUser = null;
-let allData = [];
-let filteredData = [];
-let currentPage = 1;
-let currentTab = 'all';
-let searchQuery = '';
-let typeFilter = 'all';
-let html5QrCode = null;
-let scannerActive = false;
-let currentAssetId = null;
+    // ========== GENERATE 500+ ASSETS ==========
+    function generateAssets() {
+        const types = [
+            'Non-motorized Baggage Cart', 'Belt Loader', 'Ground Power Unit', 'Pre-Conditioned Air Unit',
+            'Tow Tractor (Pushback)', 'Cargo Loader (High Loader)', 'Passenger Boarding Stairs',
+            'Cargo Dolly', 'Aircraft Wheel Chock Set', 'Air Start Unit', 'De-icing Truck',
+            'Lavatory Service Truck', 'Catering High Lift Truck', 'Fuel Bowser', 'Towbar (Pushback Bar)'
+        ];
+        const zones = [
+            'Terminal A Ramp', 'Terminal B Ramp', 'Terminal C Ramp', 'Cargo Apron North',
+            'Cargo Apron South', 'Remote Stand R1', 'Remote Stand R2', 'Hangar 3 Apron',
+            'Gate A1-A10', 'Gate B1-B10', 'Gate C1-C10', 'De-ice Pad Alpha', 'De-ice Pad Bravo'
+        ];
+        const statuses = ['OK', 'OK', 'OK', 'OK', 'OK', 'Minor', 'Minor', 'Unsafe'];
+        const assets = [];
+        for (let i = 1; i <= 500; i++) {
+            const t = types[Math.floor(Math.random() * types.length)];
+            const prefix = t.match(/\b\w/g).join('').substring(0, 4).toUpperCase();
+            const id = prefix + '-' + String(i).padStart(3, '0');
+            const s = statuses[Math.floor(Math.random() * statuses.length)];
+            const issueCount = s === 'OK' ? 0 : s === 'Minor' ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 8) + 3;
+            assets.push({
+                id, type: t, status: s,
+                lastUpdated: '2026-04-24 ' + String(8 + Math.floor(Math.random() * 12)).padStart(2, '0') + ':' + String(Math.floor(Math.random() * 60)).padStart(2, '0'),
+                issueCount,
+                location: zones[Math.floor(Math.random() * zones.length)],
+                notes: s === 'OK' ? '' : (s === 'Minor' ? 'Minor issue detected' : 'Critical repair required'),
+                inspector: 'System'
+            });
+        }
+        return assets;
+    }
 
-// ========== LOGIN ==========
-document.getElementById('roleSelector').addEventListener('click',(e)=>{
-  const card = e.target.closest('.role-card');
-  if(!card) return;
-  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
-  card.classList.add('selected');
-});
+    // ========== INITIALIZATION ==========
+    function loadData() {
+        const cachedAssets = localStorage.getItem('gse_assets');
+        allAssets = cachedAssets ? JSON.parse(cachedAssets) : generateAssets();
+        if (!cachedAssets) localStorage.setItem('gse_assets', JSON.stringify(allAssets));
+        
+        const cachedWO = localStorage.getItem('gse_workorders');
+        workOrders = cachedWO ? JSON.parse(cachedWO) : [];
+    }
 
-document.getElementById('loginBtn').addEventListener('click',()=>{
-  const userId = document.getElementById('userId').value.trim().toUpperCase();
-  const pin = document.getElementById('userPin').value.trim();
-  const role = document.querySelector('.role-card.selected')?.dataset.role;
-  const errorEl = document.getElementById('loginError');
-  if(!userId || !pin) { errorEl.textContent='Enter User ID and PIN'; return; }
-  const user = USERS[userId];
-  if(!user) { errorEl.textContent='User not found'; return; }
-  if(user.pin !== pin) { errorEl.textContent='Invalid PIN'; return; }
-  if(user.role !== role) { errorEl.textContent='Role mismatch'; return; }
-  currentUser = user;
-  localStorage.setItem('gse_user', JSON.stringify(user));
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('appContainer').style.display='block';
-  document.getElementById('qrFab').style.display='flex';
-  const badge = document.getElementById('userBadge');
-  badge.textContent = user.role==='ramp'?'Ramp Agent':'Tower Controller';
-  badge.className = 'user-badge '+user.role;
-  initApp();
-});
+    // ========== LOGIN ==========
+    document.querySelectorAll('.role-option').forEach(opt => {
+        opt.addEventListener('click', function() {
+            document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
 
-// ========== APP INIT ==========
-function initApp(){
-  loadAssets();
-  populateTypeFilter();
-}
+    document.getElementById('loginBtn').addEventListener('click', () => {
+        const userId = document.getElementById('userId').value.trim().toUpperCase();
+        const pin = document.getElementById('userPin').value.trim();
+        const selectedRole = document.querySelector('.role-option.selected')?.dataset.role;
+        const errorEl = document.getElementById('loginError');
+        errorEl.textContent = '';
+        
+        if (!userId) { errorEl.textContent = 'Enter User ID'; return; }
+        if (!pin) { errorEl.textContent = 'Enter PIN'; return; }
+        
+        const user = USERS[userId];
+        if (!user) { errorEl.textContent = 'User not found'; return; }
+        if (user.pin !== pin) { errorEl.textContent = 'Incorrect PIN'; return; }
+        if (user.role !== selectedRole) { errorEl.textContent = 'Role mismatch'; return; }
+        
+        currentUser = user;
+        localStorage.setItem('gse_current_user', JSON.stringify(user));
+        enterApp();
+    });
 
-async function loadAssets(){
-  setSyncStatus('syncing','Loading...');
-  try{
-    const resp = await fetch(API_URL);
-    const text = await resp.text();
-    const data = JSON.parse(text);
-    if(Array.isArray(data) && data.length>0){
-      allData = data;
-    } else throw new Error('Empty data');
-  } catch(e){
-    // fallback localStorage or embedded
-    const cached = localStorage.getItem('gse_all_data');
-    if(cached) allData = JSON.parse(cached);
-    else allData = []; // will show empty
-  }
-  if(allData.length>0) localStorage.setItem('gse_all_data', JSON.stringify(allData));
-  applyFilters();
-}
+    // Auto-login
+    (function() {
+        const saved = localStorage.getItem('gse_current_user');
+        if (saved) {
+            currentUser = JSON.parse(saved);
+            if (USERS[currentUser.badge] || Object.values(USERS).some(u => u.name === currentUser.name)) {
+                enterApp();
+            }
+        }
+    })();
 
-function populateTypeFilter(){
-  const types = [...new Set(allData.map(a=>a.type))].sort();
-  const sel = document.getElementById('typeFilter');
-  sel.innerHTML = '<option value="all">All Types</option>';
-  types.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
-}
+    function enterApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        document.getElementById('qrFab').style.display = 'flex';
+        
+        const badge = document.getElementById('userBadge');
+        badge.textContent = currentUser.role === 'ramp' ? 'Ramp Agent' : 'Tower Controller';
+        badge.className = 'user-badge ' + currentUser.role;
+        
+        loadData();
+        if (currentUser.role === 'ramp') {
+            document.getElementById('rampView').classList.add('active');
+            document.getElementById('towerView').classList.remove('active');
+            updateCounts();
+            renderRampList();
+        } else {
+            document.getElementById('rampView').classList.remove('active');
+            document.getElementById('towerView').classList.add('active');
+            renderTower();
+        }
+    }
 
-// ========== SYNC ==========
-function setSyncStatus(state,text){
-  document.getElementById('syncDot').className = 'sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
-  document.getElementById('syncText').textContent = text;
-}
+    // ========== RAMP AGENT ==========
+    function getFilteredAssets() {
+        let filtered = allAssets.slice();
+        if (currentTab !== 'all') filtered = filtered.filter(a => a.status === currentTab);
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            filtered = filtered.filter(a => a.id.toLowerCase().includes(q) || a.type.toLowerCase().includes(q) || a.location.toLowerCase().includes(q));
+        }
+        return filtered;
+    }
 
-// ========== FILTER & PAGINATE ==========
-function applyFilters(){
-  let filtered = allData.slice();
-  if(currentTab!=='all') filtered = filtered.filter(a=>a.status===currentTab);
-  if(typeFilter!=='all') filtered = filtered.filter(a=>a.type===typeFilter);
-  if(searchQuery.trim()){
-    const q = searchQuery.toLowerCase();
-    filtered = filtered.filter(a=> a.id.toLowerCase().includes(q) || (a.location||'').toLowerCase().includes(q) || (a.notes||'').toLowerCase().includes(q) );
-  }
-  filteredData = filtered;
-  currentPage = 1;
-  renderPage();
-  updateStats();
-}
+    function renderRampList() {
+        const filtered = getFilteredAssets();
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const page = filtered.slice(start, start + PAGE_SIZE);
+        const listEl = document.getElementById('rampList');
+        
+        if (page.length === 0) {
+            listEl.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>No equipment found</p></div>';
+        } else {
+            listEl.innerHTML = page.map(a => `
+                <div class="cart-item" data-id="${a.id}">
+                    <div class="cart-icon ${a.status}">${a.status==='OK'?'✓':a.status==='Minor'?'!':'✕'}</div>
+                    <div class="cart-info"><div class="cart-id">${a.id}</div><div class="cart-type">${a.type}</div></div>
+                    <div class="cart-meta">
+                        <span class="status-dot ${a.status}"></span>
+                        <span class="status-label ${a.status}">${a.status}</span>
+                        <div class="cart-location">📍 ${a.location}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        document.querySelectorAll('.cart-item').forEach(el => el.addEventListener('click', function() { openAssetModal(this.dataset.id); }));
+        renderPagination(filtered.length);
+    }
 
-function renderPage(){
-  const start = (currentPage-1)*PAGE_SIZE;
-  const pageItems = filteredData.slice(start, start+PAGE_SIZE);
-  const listEl = document.getElementById('cartList');
-  if(pageItems.length===0){
-    listEl.innerHTML = '<div class="empty-state"><p>No equipment found</p></div>';
-  } else {
-    listEl.innerHTML = pageItems.map(a=>{
-      const st = a.status||'OK';
-      return `<div class="cart-item" data-id="${a.id}">
-        <div class="cart-icon ${st}">${st==='OK'?'✓':st==='Minor'?'!':'✕'}</div>
-        <div class="cart-info"><div class="cart-id">${a.id}</div><div class="cart-type">${a.type||'Unknown'}</div></div>
-        <div class="cart-meta"><span class="status-dot ${st}"></span><span class="status-label ${st}">${st}</span><br><span class="cart-location">📍 ${a.location||'?'}</span></div>
-      </div>`;
-    }).join('');
-  }
-  renderPagination();
-  document.querySelectorAll('.cart-item').forEach(el=> el.addEventListener('click',()=> openDetail(el.dataset.id)));
-}
+    function renderPagination(total) {
+        const pages = Math.ceil(total / PAGE_SIZE);
+        const pag = document.getElementById('rampPagination');
+        if (pages <= 1) { pag.innerHTML = ''; return; }
+        let html = '';
+        for (let i = 1; i <= pages; i++) {
+            html += `<button class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        pag.innerHTML = html;
+        pag.querySelectorAll('.page-btn').forEach(b => b.addEventListener('click', function() {
+            currentPage = parseInt(this.dataset.page);
+            renderRampList();
+        }));
+    }
 
-function renderPagination(){
-  const totalPages = Math.ceil(filteredData.length/PAGE_SIZE);
-  const pag = document.getElementById('pagination');
-  if(totalPages<=1){ pag.innerHTML=''; return; }
-  let html = '';
-  for(let i=1;i<=totalPages;i++){
-    html += `<button class="page-btn${i===currentPage?' active':''}" data-page="${i}">${i}</button>`;
-  }
-  pag.innerHTML = html;
-  pag.querySelectorAll('.page-btn').forEach(b=> b.addEventListener('click',function(){
-    currentPage = parseInt(this.dataset.page);
-    renderPage();
-    window.scrollTo(0,0);
-  }));
-}
+    function updateCounts() {
+        document.getElementById('count-all').textContent = allAssets.length;
+        document.getElementById('count-unsafe').textContent = allAssets.filter(a => a.status === 'Unsafe').length;
+        document.getElementById('count-minor').textContent = allAssets.filter(a => a.status === 'Minor').length;
+        document.getElementById('count-ok').textContent = allAssets.filter(a => a.status === 'OK').length;
+    }
 
-function updateStats(){
-  document.getElementById('statAll').textContent = allData.length;
-  document.getElementById('statOk').textContent = allData.filter(a=>a.status==='OK').length;
-  document.getElementById('statMinor').textContent = allData.filter(a=>a.status==='Minor').length;
-  document.getElementById('statUnsafe').textContent = allData.filter(a=>a.status==='Unsafe').length;
-}
+    // ========== ASSET MODAL ==========
+    function openAssetModal(assetId) {
+        const asset = allAssets.find(a => a.id === assetId);
+        if (!asset) return;
+        
+        const existingWO = workOrders.find(w => w.assetId === assetId && w.status !== 'Resolved');
+        let html = `
+            <div class="modal-handle"></div>
+            <div class="modal-header"><h2>${asset.id}</h2><span style="color:#666;">${asset.type}</span></div>
+            <div class="modal-body">
+                <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" style="font-weight:700;color:${asset.status==='OK'?'#4CAF50':asset.status==='Minor'?'#FF9800':'#F44336'}">${asset.status}</span></div>
+                <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">${asset.location}</span></div>
+                <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value">${asset.lastUpdated}</span></div>
+                <div class="detail-row"><span class="detail-label">Issue Count</span><span class="detail-value">${asset.issueCount}</span></div>
+                ${asset.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${asset.notes}</span></div>` : ''}
+                ${existingWO ? `<div style="margin-top:8px;padding:8px;background:#FFF3E0;border-radius:6px;font-size:12px;"><strong>🔧 Work Order:</strong> ${existingWO.id} (${existingWO.priority})</div>` : ''}
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ok ${asset.status==='OK'?'active-btn':''}" onclick="updateAssetStatus('${asset.id}','OK')">✓ OK</button>
+                <button class="btn btn-minor ${asset.status==='Minor'?'active-btn':''}" onclick="updateAssetStatus('${asset.id}','Minor')">⚠ Minor</button>
+                <button class="btn btn-unsafe ${asset.status==='Unsafe'?'active-btn':''}" onclick="updateAssetStatus('${asset.id}','Unsafe')">✕ Unsafe</button>
+            </div>
+            ${currentUser.role === 'tower' && asset.status !== 'OK' ? `<button class="btn btn-close" style="background:#E3F2FD;color:#0D47A1;border-color:#0D47A1;" onclick="prepareWorkOrder('${asset.id}')">🔧 Create Work Order</button>` : ''}
+            <button class="btn-close" onclick="closeAssetModal()">Close</button>
+        `;
+        document.getElementById('assetModalContent').innerHTML = html;
+        document.getElementById('assetModal').classList.add('show');
+    }
 
-// ========== MODAL ==========
-function openDetail(assetId){
-  const asset = allData.find(a=>a.id===assetId);
-  if(!asset) return;
-  currentAssetId = assetId;
-  document.getElementById('modalTitle').textContent = asset.id;
-  document.getElementById('modalType').textContent = asset.type||'';
-  document.getElementById('modalStatus').textContent = asset.status||'OK';
-  document.getElementById('modalLocation').textContent = asset.location||'';
-  document.getElementById('modalUpdated').textContent = asset.lastUpdated||'';
-  document.getElementById('modalIssues').textContent = asset.issueCount||0;
-  document.getElementById('modalInspector').textContent = asset.inspector||currentUser?.name||'';
-  document.getElementById('modalNotes').textContent = asset.notes||'-';
-  document.getElementById('modalNotesRow').style.display = asset.notes?'flex':'none';
-  // tower note section
-  document.getElementById('towerNoteSection').style.display = currentUser?.role==='tower'?'block':'none';
-  document.getElementById('towerNoteInput').value = '';
-  // action buttons - all roles can update status
-  document.querySelectorAll('.modal-actions .btn').forEach(b=>b.classList.remove('active'));
-  if(asset.status==='OK') document.getElementById('btnOk').classList.add('active');
-  if(asset.status==='Minor') document.getElementById('btnMinor').classList.add('active');
-  if(asset.status==='Unsafe') document.getElementById('btnUnsafe').classList.add('active');
-  document.getElementById('modalOverlay').classList.add('show');
-}
+    window.updateAssetStatus = function(assetId, newStatus) {
+        const asset = allAssets.find(a => a.id === assetId);
+        if (!asset) return;
+        asset.status = newStatus;
+        asset.lastUpdated = new Date().toISOString().replace('T', ' ').substring(0,16);
+        asset.inspector = currentUser.name;
+        localStorage.setItem('gse_assets', JSON.stringify(allAssets));
+        updateCounts();
+        renderRampList();
+        openAssetModal(assetId);
+        showToast(`✅ ${assetId} → ${newStatus}`);
+    };
 
-function closeModal(){
-  document.getElementById('modalOverlay').classList.remove('show');
-  currentAssetId = null;
-}
+    function closeAssetModal() { document.getElementById('assetModal').classList.remove('show'); }
 
-async function updateStatus(newStatus){
-  if(!currentAssetId) return;
-  const asset = allData.find(a=>a.id===currentAssetId);
-  if(!asset) return;
-  const now = new Date();
-  const pad=n=>String(n).padStart(2,'0');
-  const formatted = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const newCount = newStatus==='Unsafe' ? (asset.issueCount||0)+1 : newStatus==='Minor' ? Math.max(1,(asset.issueCount||0)) : (asset.issueCount||0);
-  // update local
-  asset.status = newStatus;
-  asset.lastUpdated = formatted;
-  asset.issueCount = newCount;
-  asset.inspector = currentUser?.name||'Unknown';
-  if(currentUser?.role==='tower'){
-    const note = document.getElementById('towerNoteInput').value.trim();
-    if(note) asset.notes = note;
-  }
-  localStorage.setItem('gse_all_data', JSON.stringify(allData));
-  // attempt sync
-  setSyncStatus('syncing','Saving...');
-  try{
-    await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(asset)});
-    setSyncStatus('ok','Saved');
-  }catch(e){ setSyncStatus('error','Local only'); }
-  applyFilters();
-  openDetail(currentAssetId);
-  showToast(`✅ ${currentAssetId} → ${newStatus}`);
-  setTimeout(()=>setSyncStatus('ok','Live'),2000);
-}
+    window.prepareWorkOrder = function(assetId) {
+        closeAssetModal();
+        towerPanel = 'create';
+        document.querySelectorAll('.tower-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.tower-tab[data-panel="create"]').classList.add('active');
+        renderTower();
+        // Pre-fill asset ID
+        const sel = document.getElementById('woAsset');
+        if (sel) sel.value = assetId;
+    };
 
-// ========== EVENT LISTENERS ==========
-document.getElementById('searchInput').addEventListener('input',(e)=>{ searchQuery=e.target.value; applyFilters(); });
-document.getElementById('typeFilter').addEventListener('change',(e)=>{ typeFilter=e.target.value; applyFilters(); });
-document.getElementById('statsBar').addEventListener('click',(e)=>{
-  const card = e.target.closest('.stat-card');
-  if(!card) return;
-  currentTab = card.dataset.tab;
-  document.querySelectorAll('.stat-card').forEach(c=>c.classList.remove('active'));
-  card.classList.add('active');
-  applyFilters();
-});
-document.getElementById('modalOverlay').addEventListener('click',(e)=>{ if(e.target===document.getElementById('modalOverlay')) closeModal(); });
-document.getElementById('btnClose').addEventListener('click',closeModal);
-document.getElementById('btnOk').addEventListener('click',()=>updateStatus('OK'));
-document.getElementById('btnMinor').addEventListener('click',()=>updateStatus('Minor'));
-document.getElementById('btnUnsafe').addEventListener('click',()=>updateStatus('Unsafe'));
-document.getElementById('logoutBtn').addEventListener('click',()=>{
-  localStorage.removeItem('gse_user');
-  location.reload();
-});
+    // ========== WORK ORDERS ==========
+    function renderTower() {
+        const panel = document.getElementById('towerPanel');
+        const unsafeAssets = allAssets.filter(a => a.status === 'Unsafe');
+        const minorAssets = allAssets.filter(a => a.status === 'Minor');
+        
+        if (towerPanel === 'overview') {
+            panel.innerHTML = `
+                <div class="panel-title">Fleet Health Overview</div>
+                <div style="display:flex;gap:8px;margin-bottom:16px;">
+                    <div style="flex:1;background:#E8F5E9;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:800;color:#4CAF50;">${allAssets.filter(a=>a.status==='OK').length}</div><div style="font-size:11px;color:#666;">OK</div></div>
+                    <div style="flex:1;background:#FFF3E0;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:800;color:#FF9800;">${minorAssets.length}</div><div style="font-size:11px;color:#666;">Minor</div></div>
+                    <div style="flex:1;background:#FFEBEE;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:24px;font-weight:800;color:#F44336;">${unsafeAssets.length}</div><div style="font-size:11px;color:#666;">Unsafe</div></div>
+                </div>
+                <div class="panel-title">⚠️ Recent Unsafe Equipment</div>
+                ${unsafeAssets.slice(0, 5).map(a => `
+                    <div class="wo-card" onclick="openAssetModal('${a.id}')">
+                        <div class="wo-header"><span class="wo-id">${a.id}</span><span class="wo-priority Critical">Unsafe</span></div>
+                        <div style="font-size:12px;">${a.type} · ${a.location}</div>
+                    </div>
+                `).join('')}
+            `;
+        } else if (towerPanel === 'unsafe') {
+            const allUnsafe = [...unsafeAssets, ...minorAssets];
+            panel.innerHTML = `<div class="panel-title">All Unsafe & Minor Equipment</div>` +
+                allUnsafe.map(a => `
+                    <div class="wo-card" onclick="openAssetModal('${a.id}')">
+                        <div class="wo-header"><span class="wo-id">${a.id}</span><span class="wo-priority ${a.status==='Unsafe'?'Critical':'High'}">${a.status}</span></div>
+                        <div style="font-size:12px;">${a.type} · ${a.location}</div>
+                        <button class="btn" style="margin-top:8px;background:#E3F2FD;color:#0D47A1;border-color:#0D47A1;font-size:11px;" onclick="event.stopPropagation();prepareWorkOrder('${a.id}')">Create Work Order</button>
+                    </div>
+                `).join('');
+        } else if (towerPanel === 'workorders') {
+            panel.innerHTML = `<div class="panel-title">Active Work Orders</div>` +
+                (workOrders.length === 0 ? '<p style="color:#999;">No work orders yet.</p>' :
+                workOrders.map(wo => `
+                    <div class="wo-card">
+                        <div class="wo-header"><span class="wo-id">${wo.id}</span><span class="wo-priority ${wo.priority}">${wo.priority}</span></div>
+                        <div style="font-size:12px;"><strong>${wo.assetId}</strong> - ${wo.assetType}</div>
+                        <div style="font-size:11px;color:#666;">Assigned to: ${wo.crew} | Status: ${wo.status}</div>
+                        <div style="font-size:11px;color:#999;">${wo.description}</div>
+                    </div>
+                `).join(''));
+        } else if (towerPanel === 'create') {
+            panel.innerHTML = `
+                <div class="panel-title">New Work Order</div>
+                <div class="form-group"><label>Asset</label><select id="woAsset">${allAssets.filter(a=>a.status!=='OK').map(a=>`<option value="${a.id}">${a.id} - ${a.type} (${a.status})</option>`).join('')}</select></div>
+                <div class="form-group"><label>Priority</label><select id="woPriority"><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+                <div class="form-group"><label>Assign Crew</label><select id="woCrew"><option>Alpha Maintenance</option><option>Bravo Maintenance</option><option>Delta Repair Squad</option><option>Echo Electrical</option></select></div>
+                <div class="form-group"><label>Description</label><textarea id="woDesc">Repair required for safe operation.</textarea></div>
+                <button class="submit-btn" id="createWO">Create Work Order</button>
+            `;
+            document.getElementById('createWO').addEventListener('click', () => {
+                const assetId = document.getElementById('woAsset').value;
+                const asset = allAssets.find(a => a.id === assetId);
+                const wo = {
+                    id: 'WO-' + Date.now().toString().slice(-6),
+                    assetId,
+                    assetType: asset.type,
+                    priority: document.getElementById('woPriority').value,
+                    crew: document.getElementById('woCrew').value,
+                    description: document.getElementById('woDesc').value,
+                    status: 'Open',
+                    createdBy: currentUser.name,
+                    createdAt: new Date().toISOString()
+                };
+                workOrders.push(wo);
+                localStorage.setItem('gse_workorders', JSON.stringify(workOrders));
+                showToast('✅ Work order created!');
+                towerPanel = 'workorders';
+                document.querySelectorAll('.tower-tab').forEach(t => t.classList.remove('active'));
+                document.querySelector('.tower-tab[data-panel="workorders"]').classList.add('active');
+                renderTower();
+            });
+        }
+    }
 
-// ========== QR SCANNER ==========
-document.getElementById('qrFab').addEventListener('click',openScanner);
-document.getElementById('scannerClose').addEventListener('click',closeScanner);
-document.getElementById('scannerManual').addEventListener('click',()=>{ closeScanner(); manualEntry(); });
+    // ========== TOWER TABS ==========
+    document.getElementById('towerTabs').addEventListener('click', e => {
+        const tab = e.target.closest('.tower-tab');
+        if (!tab) return;
+        towerPanel = tab.dataset.panel;
+        document.querySelectorAll('.tower-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderTower();
+    });
 
-function openScanner(){
-  document.getElementById('scannerOverlay').classList.add('show');
-  if(!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
-  html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:180,height:180}}, onScanSuccess, ()=>{}).then(()=>scannerActive=true).catch(err=>{ showToast('Camera access denied'); closeScanner(); });
-}
-function closeScanner(){
-  if(html5QrCode && scannerActive){ html5QrCode.stop().catch(()=>{}); scannerActive=false; }
-  document.getElementById('scannerOverlay').classList.remove('show');
-}
-function onScanSuccess(decodedText){
-  if(scannerActive){ html5QrCode.stop().catch(()=>{}); scannerActive=false; }
-  document.getElementById('scannerOverlay').classList.remove('show');
-  let id = decodedText.trim().toUpperCase().replace(/[^A-Z0-9\-]/g,'');
-  const asset = allData.find(a=>a.id===id);
-  if(asset){ openDetail(id); showToast('✅ Found: '+id); }
-  else { showToast('❌ Not found: '+id); }
-}
-function manualEntry(){
-  const id = prompt('Enter Asset ID:','');
-  if(id){
-    const clean = id.trim().toUpperCase().replace(/[^A-Z0-9\-]/g,'');
-    const asset = allData.find(a=>a.id===clean);
-    if(asset) openDetail(clean); else showToast('❌ Not found');
-  }
-}
+    // ========== GENERAL LISTENERS ==========
+    document.getElementById('rampTabs').addEventListener('click', e => {
+        const tab = e.target.closest('.tab');
+        if (!tab) return;
+        currentTab = tab.dataset.tab;
+        document.querySelectorAll('#rampTabs .tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentPage = 1;
+        renderRampList();
+    });
 
-// ========== TOAST ==========
-function showToast(msg){
-  const c = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className='toast'; t.textContent=msg; c.appendChild(t);
-  setTimeout(()=>t.remove(),2500);
-}
+    document.getElementById('rampSearch').addEventListener('input', e => {
+        searchQuery = e.target.value;
+        currentPage = 1;
+        renderRampList();
+    });
 
-// ========== INIT LOGIN CHECK ==========
-const savedUser = localStorage.getItem('gse_user');
-if(savedUser){
-  currentUser = JSON.parse(savedUser);
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('appContainer').style.display='block';
-  document.getElementById('qrFab').style.display='flex';
-  const badge = document.getElementById('userBadge');
-  badge.textContent = currentUser.role==='ramp'?'Ramp Agent':'Tower Controller';
-  badge.className = 'user-badge '+currentUser.role;
-  initApp();
-} else {
-  document.getElementById('appContainer').style.display='none';
-  document.getElementById('qrFab').style.display='none';
-}
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('gse_current_user');
+        location.reload();
+    });
+
+    // ========== QR SCANNER ==========
+    function openScanner() {
+        document.getElementById('scannerOverlay').classList.add('show');
+        if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, 
+            decodedText => {
+                if (scannerActive) {
+                    html5QrCode.stop().then(() => scannerActive = false);
+                    closeScanner();
+                    const id = decodedText.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+                    const asset = allAssets.find(a => a.id === id);
+                    if (asset) openAssetModal(id);
+                    else showToast('❌ Not found: ' + id);
+                }
+            },
+            () => {}
+        ).then(() => scannerActive = true).catch(err => {
+            showToast('Camera access denied');
+            closeScanner();
+        });
+    }
+
+    function closeScanner() {
+        document.getElementById('scannerOverlay').classList.remove('show');
+        if (html5QrCode && scannerActive) html5QrCode.stop().catch(() => {});
+        scannerActive = false;
+    }
+
+    document.getElementById('qrFab').addEventListener('click', openScanner);
+    document.getElementById('scannerClose').addEventListener('click', closeScanner);
+    document.getElementById('scannerManual').addEventListener('click', () => {
+        closeScanner();
+        const id = prompt('Enter Asset ID:');
+        if (id) {
+            const asset = allAssets.find(a => a.id === id.trim().toUpperCase());
+            if (asset) openAssetModal(id.trim().toUpperCase());
+            else showToast('❌ Not found');
+        }
+    });
+
+    // ========== HELPERS ==========
+    function showToast(msg) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = msg;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+
+    // Close modals on overlay click
+    document.getElementById('assetModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('assetModal')) closeAssetModal();
+    });
 })();
 </script>
 </body>
